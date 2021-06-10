@@ -108,11 +108,11 @@ for subject_id in tqdm(subjects_idc):
 
         if not os.path.exists(os.path.join(save_path, subject_id)):
             os.mkdir(os.path.join(save_path, subject_id))
-        # raw_data.to_csv(os.path.join(save_path, subject_id, run.rstrip(".edf") + ".csv"), index=False)
-        # raw_labels.to_csv(os.path.join(save_path, subject_id, run.rstrip(".edf") + "_labels.csv"), index=False)
+        raw_data.to_csv(os.path.join(save_path, subject_id, run.rstrip(".edf") + ".csv"), index=False)
+        raw_labels.to_csv(os.path.join(save_path, subject_id, run.rstrip(".edf") + "_labels.csv"), index=False)
 
 diff_df = pd.DataFrame(diff_df)
-# diff_df.to_csv(os.path.join(save_path, "data_label_diff.csv"))
+diff_df.to_csv(os.path.join(save_path, "data_label_diff.csv"))
 
 # Note 1: subject 100 showed errors. 
 # we're ignoring subjects:
@@ -158,10 +158,10 @@ if not os.path.isdir("./dataset/physionet.org_csv_full_imagine/"):
 
 
 # %%
-for filename in filenames:
+for filename in tqdm(filenames):
     df = pd.read_csv("./dataset/physionet.org_csv_full/" + filename)
     df = df[df["label"].str.contains("imagine")]
-    df.to_csv("./dataset/physionet.org_csv_full_imagine/" + filename, index=False)
+    df.to_csv("./dataset/physionet.org_csv_full_imagine/" + filename[:4] + "_imagine.csv", index=False)
 
 
 # %%
