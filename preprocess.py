@@ -72,6 +72,8 @@ def change_labels(filename, label_df):
 
 # %%
 # For recording length differences between data_df and labels_df
+if not os.path.isdir(save_path):
+    os.mkdir(save_path)
 diff_df = []
 
 # Convert dataset into .csv and save
