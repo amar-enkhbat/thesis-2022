@@ -158,10 +158,10 @@ if not os.path.isdir("./dataset/physionet.org_csv_full_imagine/"):
 
 
 # %%
-for filename in filenames:
+for filename in tqdm(filenames):
     df = pd.read_csv("./dataset/physionet.org_csv_full/" + filename)
     df = df[df["label"].str.contains("imagine")]
-    df.to_csv("./dataset/physionet.org_csv_full_imagine/" + filename, index=False)
+    df.to_csv("./dataset/physionet.org_csv_full_imagine/" + filename[:4] + "_imagine.csv", index=False)
 
 
 # %%
