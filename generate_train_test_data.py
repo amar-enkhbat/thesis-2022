@@ -43,4 +43,4 @@ if __name__ == "__main__":
         train_idc = [i for i in subjects_idc if i not in test_idc]
         print(test_idc)
         cross_subject_data = create_cross_subject_data(train_idc, test_idc)
-        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data{i}.pickle", "wb"))
+        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}.pickle", "wb"))
