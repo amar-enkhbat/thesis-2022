@@ -1,10 +1,10 @@
-import mne
 import os
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import random
 import pickle
+from tqdm import tqdm
 
 random_seed = 1
 random.seed(random_seed)
@@ -38,9 +38,8 @@ if __name__ == "__main__":
     if not os.path.isdir("./dataset/train"):
         os.mkdir("./dataset/train")
 
-    for i in range(9):
+    for i in tqdm(range(9)):
         test_idc = random.sample(subjects_idc, 10)
         train_idc = [i for i in subjects_idc if i not in test_idc]
-        print(test_idc)
         cross_subject_data = create_cross_subject_data(train_idc, test_idc)
-        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data{i}.pickle", "wb"))
+        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}.pickle", "wb"))

@@ -1,7 +1,6 @@
 .vscode/
 env/
 dataset/
-GCRAM/
 .python-version
 *.pyc
 __pycache__/
