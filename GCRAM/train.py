@@ -100,12 +100,23 @@ def segment_dataset(X, window_size, step):
 
 # train_win_x = segment_dataset(train_raw_x, window_size, step)
 # test_win_x = segment_dataset(test_raw_x, window_size, step)
+
+# pickle.dump(train_win_x, open("../dataset/train/train_win_x.pickle", "wb"))
+# pickle.dump(test_win_x, open("../dataset/train/test_win_x.pickle", "wb"))
+
 train_win_x = segment_dataset(train_raw_x, window_size, window_size)
 test_win_x = segment_dataset(test_raw_x, window_size, window_size)
+train_y = train_y[::400]
+test_y = test_y[::400]
+
 print("train_raw_x shape after segment_dataset:")
 print(train_win_x.shape)
 print("test_raw_x shape after segment_dataset:")
 print(test_win_x.shape)
+print("Train y shape:")
+print(train_y.shape)
+print("Test y shape:")
+print(test_y.shape)
 
 # [trial, window, channel, time_length]
 train_win_x = np.transpose(train_win_x, [0, 2, 3, 1])
@@ -273,6 +284,11 @@ for epoch in range(training_epochs):
 		batch_x = batch_x.reshape([len(batch_x)*num_timestep, num_node, window_size, 1])
 		# batch_x = batch_x.reshape([-1, num_node, window_size, 1])
 		batch_y = y_train[offset:(offset + batch_size), :]
+		# print("Batch X shape:")
+		# print(batch_x.shape)
+		# print("Batch y shape:")
+		# print(batch_y.shape)
+		# exit()
 		_, c = sess.run([optimizer, cost], feed_dict={X: batch_x, Y: batch_y, keep_prob: 1-dropout_prob, train_phase: True})
 	# calculate train and test accuracy after each training epoch
 	if(epoch%1 == 0):
@@ -293,18 +309,36 @@ for epoch in range(training_epochs):
 			train_accuracy = np.append(train_accuracy, train_a)
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, " Training Cost: ", np.mean(train_l), "Training Accuracy: ", np.mean(train_accuracy))
 		# calculate test accuracy after each training epoch
+		ctr = 0
 		for j in range(batch_num_per_epoch):
-			offset = (j * batch_size) % (test_y.shape[0] - batch_size) 
+			# print("Test X shape:")
+			# print(features_test.shape)
+			# print("Test y shape:")
+			# print(test_y.shape)
+			offset = (j * batch_size) % (test_y.shape[0] - batch_size)
+			print(offset) 
 			test_batch_x = features_test[offset:(offset + batch_size), :, :, :]
 			test_batch_x = test_batch_x.reshape([len(test_batch_x)*num_timestep, num_node, window_size, 1])
 			test_batch_y = y_test[offset:(offset + batch_size), :]
-			
+			if test_batch_x.shape[0] != test_batch_y.shape[0]:
+				# print("Test batch X shape:")
+				# print(test_batch_x)
+				# print("Test batch y shape:")
+				# print(test_batch_y)
+				# print("Passed!", ctr)
+				ctr += 1
+				continue
+			# print("Test batch X shape:")
+			# print(test_batch_x.shape)
+			# print("Test batch y shape:")
+			# print(test_batch_y.shape)
+			# exit()
 			test_a, test_c, test_p = sess.run([accuracy, cost, y_posi], feed_dict={X: test_batch_x, Y: test_batch_y, keep_prob: 1.0, train_phase: True})
 			
 			test_accuracy = np.append(test_accuracy, test_a)
 			test_l = np.append(test_l, test_c)
 			true_test.append(test_batch_y)
 			posi_test.append(test_p)
-
+		print("Number of passed batches:", ctr)
 		auc_roc_test = roc_auc_score(y_true=np.array(true_test).reshape([-1, 2]), y_score = np.array(posi_test).reshape([-1, 2]))
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, "Test AUC: ", auc_roc_test, " Test Cost: ", np.mean(test_l), "Test Accuracy: ", np.mean(test_accuracy), "\n")

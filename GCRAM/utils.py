@@ -3,6 +3,7 @@ import pandas as pd
 import scipy.sparse as sp
 from sklearn.metrics import classification_report, roc_auc_score, auc, roc_curve, f1_score
 from scipy import interp
+from tqdm import tqdm
 
 def classification_report_csv(report):
     report_data = []
@@ -66,7 +67,7 @@ def segment_signal_without_transition(data, window_size, step):
 
 def segment_dataset(X, window_size, step):
 	win_x = []
-	for i in range(X.shape[0]):
+	for i in tqdm(range(X.shape[0])):
 		win_x = win_x + [segment_signal_without_transition(X[i], window_size, step)]
 	win_x = np.array(win_x)
 	return win_x
