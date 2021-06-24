@@ -25,7 +25,7 @@ num_node = 64
 model = 'ng_cram'
 
 # data = sio.loadmat("./cross_subject_data_"+str(file_num)+".mat")
-data = pickle.load(open("/home/amar/Desktop/lab/dataset/train/cross_subject_data_0.pickle", "rb"))
+data = pickle.load(open("../dataset/train/cross_subject_data_0.pickle", "rb"))
 
 test_X	= data["test_x"]
 train_X	= data["train_x"]
@@ -46,7 +46,12 @@ test_y = np.asarray(pd.get_dummies(test_y.ravel()), dtype = np.int8)
 print("Y after pd.get_dummies:")
 print("train_y shape:", train_y.shape)
 print("test_y shape:", test_y.shape)
-
+#print(test_y[0])
+#test_y[1] = [1, 0, 0, 0]
+#test_y[2] = [0, 1, 0, 0]
+#test_y[3] = [0, 0, 1, 0]
+#test_y[4] = [0, 0, 0, 1]
+#exit()
 tmp_df = pd.read_csv("../dataset/physionet.org_csv/S001/S001R01.csv")
 ch_names = tmp_df.columns[2:]
 ch_pos_1010_dist, ch_pos_1010_names = get_sensor_pos(ch_names)
