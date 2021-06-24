@@ -117,7 +117,7 @@ print("Train y shape:")
 print(train_y.shape)
 print("Test y shape:")
 print(test_y.shape)
-exit()
+# exit()
 # [trial, window, channel, time_length]
 train_win_x = np.transpose(train_win_x, [0, 2, 3, 1])
 test_win_x = np.transpose(test_win_x, [0, 2, 3, 1])
@@ -187,7 +187,7 @@ num_labels = 4
 learning_rate = 1e-5
 
 # set maximum traing epochs
-training_epochs = 110
+training_epochs = 2
 
 # set batch size
 batch_size = 10
@@ -274,6 +274,9 @@ config.gpu_options.allow_growth = True
 
 sess = tf.Session(config=config)
 sess.run(tf.global_variables_initializer())
+
+history_train = []
+history_test = []
 for epoch in range(training_epochs):
 	true_test = []
 	posi_test = []
@@ -308,6 +311,7 @@ for epoch in range(training_epochs):
 			train_l = np.append(train_l, train_c)
 			train_accuracy = np.append(train_accuracy, train_a)
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, " Training Cost: ", np.mean(train_l), "Training Accuracy: ", np.mean(train_accuracy))
+		history_train.append([epoch, np.mean(train_l), np.mean(train_accuracy)])
 		# calculate test accuracy after each training epoch
 		ctr = 0
 		for j in range(batch_num_per_epoch):
@@ -342,5 +346,17 @@ for epoch in range(training_epochs):
 		print("Number of passed batches:", ctr)
 		auc_roc_test = roc_auc_score(y_true=np.array(true_test).reshape([-1, 2]), y_score = np.array(posi_test).reshape([-1, 2]))
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, "Test AUC: ", auc_roc_test, " Test Cost: ", np.mean(test_l), "Test Accuracy: ", np.mean(test_accuracy), "\n")
+		history_test.append([epoch, np.mean(test_l), np.mean(test_accuracy), auc_roc_test])
 
+# print(history_train)
+# print(history_test)
+print(test_p.argmax(axis=1))
+print(test_batch_y.argmax(axis=1))
 
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_true=test_batch_y.argmax(axis=1), y_pred=test_p.argmax(axis=1))
+print(cm)
+
+pickle.dump(cm, open("cm.pickle", "wb"))
+pickle.dump(history_train, open("history_train.pickle", "wb"))
+pickle.dump(history_test, open("history_test.pickle", "wb"))
