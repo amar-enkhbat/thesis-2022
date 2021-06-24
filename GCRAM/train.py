@@ -106,8 +106,8 @@ def segment_dataset(X, window_size, step):
 
 train_win_x = segment_dataset(train_raw_x, window_size, window_size)
 test_win_x = segment_dataset(test_raw_x, window_size, window_size)
-train_y = train_y[::400]
-test_y = test_y[::400]
+train_y = train_y[::window_size]
+test_y = test_y[::window_size]
 
 print("train_raw_x shape after segment_dataset:")
 print(train_win_x.shape)
@@ -117,7 +117,7 @@ print("Train y shape:")
 print(train_y.shape)
 print("Test y shape:")
 print(test_y.shape)
-
+exit()
 # [trial, window, channel, time_length]
 train_win_x = np.transpose(train_win_x, [0, 2, 3, 1])
 test_win_x = np.transpose(test_win_x, [0, 2, 3, 1])
@@ -316,7 +316,7 @@ for epoch in range(training_epochs):
 			# print("Test y shape:")
 			# print(test_y.shape)
 			offset = (j * batch_size) % (test_y.shape[0] - batch_size)
-			print(offset) 
+			# print(offset) 
 			test_batch_x = features_test[offset:(offset + batch_size), :, :, :]
 			test_batch_x = test_batch_x.reshape([len(test_batch_x)*num_timestep, num_node, window_size, 1])
 			test_batch_y = y_test[offset:(offset + batch_size), :]
@@ -342,3 +342,5 @@ for epoch in range(training_epochs):
 		print("Number of passed batches:", ctr)
 		auc_roc_test = roc_auc_score(y_true=np.array(true_test).reshape([-1, 2]), y_score = np.array(posi_test).reshape([-1, 2]))
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, "Test AUC: ", auc_roc_test, " Test Cost: ", np.mean(test_l), "Test Accuracy: ", np.mean(test_accuracy), "\n")
+
+
