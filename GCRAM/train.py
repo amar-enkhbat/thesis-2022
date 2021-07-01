@@ -346,7 +346,8 @@ for epoch in range(training_epochs):
 			test_l = np.append(test_l, test_c)
 			true_test.append(test_batch_y)
 			posi_test.append(test_p)
-			test_cm = test_cm + confusion_matrix(test_batch_y, test_p)
+			test_cm = test_cm + confusion_matrix(test_batch_y.argmax(axis=1), test_p.argmax(axis=1))
+			print(test_cm)
 		print("Number of passed batches:", ctr)
 		auc_roc_test = roc_auc_score(y_true=np.array(true_test).reshape([-1, 2]), y_score = np.array(posi_test).reshape([-1, 2]))
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, "Test AUC: ", auc_roc_test, " Test Cost: ", np.mean(test_l), "Test Accuracy: ", np.mean(test_accuracy), "\n")
@@ -355,8 +356,8 @@ for epoch in range(training_epochs):
 
 # print(history_train)
 # print(history_test)
-print(test_p.argmax(axis=1))
-print(test_batch_y.argmax(axis=1))
+# print(test_p.argmax(axis=1))
+# print(test_batch_y.argmax(axis=1))
 
 
 # print(cm)
