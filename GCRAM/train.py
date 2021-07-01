@@ -28,15 +28,15 @@ model = 'ng_cram'
 # data = sio.loadmat("./cross_subject_data_"+str(file_num)+".mat")
 data = pickle.load(open("../dataset/train/cross_subject_data_0.pickle", "rb"))
 
-test_X	= data["test_x"]
-train_X	= data["train_x"]
+test_X	= data["test_x"][:2000]
+train_X	= data["train_x"][:2000]
 print("test_X shape:")
 print(test_X.shape)
 print("train_X shape:")
 print(train_X.shape)
 
-test_y	= data["test_y"].ravel()
-train_y = data["train_y"].ravel()
+test_y	= data["test_y"].ravel()[:2000]
+train_y = data["train_y"].ravel()[:2000]
 print("test_y shape:")
 print(test_y.shape)
 print("train_X shape:")
@@ -278,6 +278,8 @@ sess.run(tf.global_variables_initializer())
 
 history_train = []
 history_test = []
+test_cm = np.zeros((num_labels, num_labels))
+
 for epoch in range(training_epochs):
 	true_test = []
 	posi_test = []
@@ -344,10 +346,12 @@ for epoch in range(training_epochs):
 			test_l = np.append(test_l, test_c)
 			true_test.append(test_batch_y)
 			posi_test.append(test_p)
+			test_cm = test_cm + confusion_matrix(test_batch_y, test_p)
 		print("Number of passed batches:", ctr)
 		auc_roc_test = roc_auc_score(y_true=np.array(true_test).reshape([-1, 2]), y_score = np.array(posi_test).reshape([-1, 2]))
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, "Test AUC: ", auc_roc_test, " Test Cost: ", np.mean(test_l), "Test Accuracy: ", np.mean(test_accuracy), "\n")
-		history_test.append([epoch, np.mean(test_l), np.mean(test_accuracy), auc_roc_test, confusion_matrix(y_true=test_batch_y.argmax(axis=1), y_pred=test_p.argmax(axis=1))])
+		
+		history_test.append([epoch, np.mean(test_l), np.mean(test_accuracy), auc_roc_test, test_cm])
 
 # print(history_train)
 # print(history_test)
