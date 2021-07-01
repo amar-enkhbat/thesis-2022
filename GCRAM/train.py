@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import pickle
 from convert_to_graphs import *
+from sklearn.metrics import confusion_matrix
 
 random_seed = 33
 tf.set_random_seed(random_seed)
@@ -346,17 +347,16 @@ for epoch in range(training_epochs):
 		print("Number of passed batches:", ctr)
 		auc_roc_test = roc_auc_score(y_true=np.array(true_test).reshape([-1, 2]), y_score = np.array(posi_test).reshape([-1, 2]))
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, "Test AUC: ", auc_roc_test, " Test Cost: ", np.mean(test_l), "Test Accuracy: ", np.mean(test_accuracy), "\n")
-		history_test.append([epoch, np.mean(test_l), np.mean(test_accuracy), auc_roc_test])
+		history_test.append([epoch, np.mean(test_l), np.mean(test_accuracy), auc_roc_test, confusion_matrix(y_true=test_batch_y.argmax(axis=1), y_pred=test_p.argmax(axis=1))])
 
 # print(history_train)
 # print(history_test)
 print(test_p.argmax(axis=1))
 print(test_batch_y.argmax(axis=1))
 
-from sklearn.metrics import confusion_matrix
-cm = confusion_matrix(y_true=test_batch_y.argmax(axis=1), y_pred=test_p.argmax(axis=1))
-print(cm)
 
-pickle.dump(cm, open("cm.pickle", "wb"))
+# print(cm)
+
+# pickle.dump(cm, open("cm.pickle", "wb"))
 pickle.dump(history_train, open("history_train.pickle", "wb"))
 pickle.dump(history_test, open("history_test.pickle", "wb"))
