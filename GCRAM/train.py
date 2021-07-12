@@ -188,7 +188,7 @@ num_labels = 4
 learning_rate = 1e-5
 
 # set maximum traing epochs
-training_epochs = 2
+training_epochs = 220
 
 # set batch size
 batch_size = 10
@@ -278,7 +278,7 @@ sess.run(tf.global_variables_initializer())
 
 history_train = []
 history_test = []
-test_cm = np.zeros((num_labels, num_labels))
+# test_cm = np.zeros((num_labels, num_labels))
 
 for epoch in range(training_epochs):
 	true_test = []
@@ -346,13 +346,13 @@ for epoch in range(training_epochs):
 			test_l = np.append(test_l, test_c)
 			true_test.append(test_batch_y)
 			posi_test.append(test_p)
-			test_cm = test_cm + confusion_matrix(test_batch_y.argmax(axis=1), test_p.argmax(axis=1))
-			print(test_cm)
+			# test_cm = test_cm + confusion_matrix(test_batch_y.argmax(axis=1), test_p.argmax(axis=1))
+			# print(test_cm)
 		print("Number of passed batches:", ctr)
 		auc_roc_test = roc_auc_score(y_true=np.array(true_test).reshape([-1, 2]), y_score = np.array(posi_test).reshape([-1, 2]))
 		print("("+time.asctime(time.localtime(time.time()))+") Epoch: ", epoch+1, "Test AUC: ", auc_roc_test, " Test Cost: ", np.mean(test_l), "Test Accuracy: ", np.mean(test_accuracy), "\n")
 		
-		history_test.append([epoch, np.mean(test_l), np.mean(test_accuracy), auc_roc_test, test_cm])
+		history_test.append([epoch, np.mean(test_l), np.mean(test_accuracy), auc_roc_test])
 
 # print(history_train)
 # print(history_test)
