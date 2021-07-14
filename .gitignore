@@ -4,4 +4,3 @@ dataset/
 .python-version
 *.pyc
 __pycache__/
-*.pickle
