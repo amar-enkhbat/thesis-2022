@@ -188,7 +188,7 @@ num_labels = 4
 learning_rate = 1e-5
 
 # set maximum traing epochs
-training_epochs = 1000
+training_epochs = 5000
 
 # set batch size
 batch_size = 10

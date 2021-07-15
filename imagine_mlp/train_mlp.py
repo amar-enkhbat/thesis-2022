@@ -105,22 +105,23 @@ def test(dataloader, model, loss_fn):
 
 if __name__ == '__main__':
 
-    debug = True
+    debug = False
     batch_size = 64
     
-    training_data = PhysionetDataset('/home/amar/Desktop/thesis-2022/dataset/train/cross_subject_data_0.pickle', train=True, debug=debug, one_hot_encoding=True)
-    test_data = PhysionetDataset('/home/amar/Desktop/thesis-2022/dataset/train/cross_subject_data_0.pickle', train=False, debug=debug, one_hot_encoding=True)
+    training_data = PhysionetDataset('../dataset/train/cross_subject_data_0.pickle', train=True, debug=debug, one_hot_encoding=True)
+    test_data = PhysionetDataset('../dataset/train/cross_subject_data_0.pickle', train=False, debug=debug, one_hot_encoding=True)
 
-    train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, num_workers=0)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True, num_workers=0)
+    train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, num_workers=os.cpu_count())
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=os.cpu_count())
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print('Using device:', device)
     model = MLP().to(device)
 
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters())
 
-    epochs = 100
+    epochs = 200
 
     train_loss = []
     test_loss = []
