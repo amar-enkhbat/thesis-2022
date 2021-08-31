@@ -4,8 +4,9 @@ dataset/
 .python-version
 *.pyc
 __pycache__/
-<<<<<<< HEAD
-=======
 *.pickle
 imagine_on_cnn/
->>>>>>> 5f0962cf81ba12a28598c1aef1e2e0873b402ba6
+runs/
+AGCRN/
+pytorch_tutorial/
+time_series_tutorial/
