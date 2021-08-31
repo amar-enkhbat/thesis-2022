@@ -10,3 +10,4 @@ runs/
 AGCRN/
 pytorch_tutorial/
 time_series_tutorial/
+pytorch_gcn/
