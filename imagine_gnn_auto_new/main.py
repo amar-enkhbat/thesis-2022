@@ -23,6 +23,7 @@ def run_auto_gnn_model(run_number, random_seed, summary_dir, num_epochs, batch_s
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
 
     writer = SummaryWriter(summary_dir)
 
@@ -63,13 +64,13 @@ if __name__=='__main__':
     seq_len = 100
     hidden_sizes = [256, 512, 256]
 
-    for run_number in n_runs:
-        text = f'Run Number:{run_number}'
-        print('')
-        print('#'*len(text))
-        print(text)
-        print('#'*len(text))
-        print('')
-        run_auto_gnn_model(run_number, random_seed, f'runs/gnn_auto_{run_number}', num_epochs, batch_size, seq_len, hidden_sizes)
-    # run_number = '5_subjects'
-    # run_auto_gnn_model(run_number, random_seed, f'runs/gnn_auto_{run_number}', num_epochs, batch_size, seq_len, hidden_sizes)
+    # for run_number in n_runs:
+    #     text = f'Run Number:{run_number}'
+    #     print('')
+    #     print('#'*len(text))
+    #     print(text)
+    #     print('#'*len(text))
+    #     print('')
+    #     run_auto_gnn_model(run_number, random_seed, f'runs/gnn_auto_{run_number}', num_epochs, batch_size, seq_len, hidden_sizes)
+    run_number = '5_subjects'
+    run_auto_gnn_model(run_number, random_seed, f'runs/gnn_auto_{run_number}', num_epochs, batch_size, seq_len, hidden_sizes)

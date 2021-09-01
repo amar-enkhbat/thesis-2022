@@ -117,8 +117,8 @@ def train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epo
     best_acc = 0.0
 
     for epoch in range(num_epochs):
-        # print(f'Epoch {epoch}/{num_epochs-1}')
-        # print('-' * 10)
+        print(f'Epoch {epoch}/{num_epochs-1}')
+        print('-' * 10)
 
         for phase in ['train', 'val']:
             if phase == 'train':
@@ -151,13 +151,13 @@ def train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epo
             writer.add_scalar(f'{phase} loss', epoch_loss, epoch)
             writer.add_scalar(f'{phase} accuracy', epoch_acc, epoch)
 
-            # print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
+            print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
 
-        # print()
+        print()
 
     time_elapsed = time.time() - since
     print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed%60:.0f}s')
