@@ -25,7 +25,7 @@ writer = SummaryWriter('runs/fcn_timeseries')
 
 
 # %%
-X = pickle.load(open('../dataset/train/cross_subject_data_5_subjects.pickle', 'rb'))
+X = pickle.load(open('../dataset/train/cross_subject_data_0.pickle', 'rb'))
 y = X['train_y']
 
 X = X['train_x'].astype(np.float32)
@@ -155,11 +155,11 @@ def train_model(model, criterion, optimizer, num_epochs=25):
 # %%
 sequence_length = seq_len
 input_size = sequence_length
-hidden_size_1 = 1024
-hidden_size_2 = 2048
-hidden_size_3 = 1024
+hidden_size_1 = 256
+hidden_size_2 = 512
+hidden_size_3 = 256
 num_classes = 4
-num_epochs = 1
+num_epochs = 100
 batch_size = 100
 
 class FCN(nn.Module):
@@ -228,7 +228,7 @@ sns.heatmap(cm_df, annot=True, fmt='g')
 plt.ylabel('True')
 plt.xlabel('Pred')
 plt.tight_layout()
-plt.savefig('runs/fcn/cm.png')
+plt.savefig('runs/fcn_timeseries/cm.png')
 # plt.show()
 
 
