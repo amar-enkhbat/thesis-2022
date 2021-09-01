@@ -11,11 +11,10 @@ class GraphConvolution(Module):
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
     """
 
-    def __init__(self, in_features, out_features, batch_size, n_channels, bias=True):
+    def __init__(self, in_features, out_features, n_channels, bias=True):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.batch_size = batch_size
         self.n_channels = n_channels
         self.weight = Parameter(torch.FloatTensor(in_features, out_features))
         if bias:

@@ -25,7 +25,7 @@ writer = SummaryWriter('runs/fcn_timeseries')
 
 
 # %%
-X = pickle.load(open('../dataset/train/cross_subject_data_5_subjects.pickle', 'rb'))
+X = pickle.load(open('../dataset/train/cross_subject_data_0.pickle', 'rb'))
 y = X['train_y']
 
 X = X['train_x'].astype(np.float32)
