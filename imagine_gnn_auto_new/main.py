@@ -47,9 +47,9 @@ def run_auto_gnn_model(run_number, random_seed, summary_dir, num_epochs, batch_s
 
     # writer.add_graph(model, X_train[:batch_size])
 
-    train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epochs, writer)
+    best_model = train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epochs, writer)
 
-    y_preds, y_test = model_predict(model, test_loader=dataloaders['val'])
+    y_preds, y_test = model_predict(best_model, test_loader=dataloaders['val'])
 
     cr, cm = print_classification_report(y_test, y_preds, num_classes, writer)
 
