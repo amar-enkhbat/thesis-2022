@@ -58,7 +58,7 @@ if __name__=='__main__':
     random_seed = 1
     n_runs = 5
     n_runs = [i for i in range(n_runs)]
-    num_epochs = 1
+    num_epochs = 100
     batch_size = 32
     seq_len = 100
     hidden_sizes = [256, 512, 256]
