@@ -208,12 +208,12 @@ def print_classification_report(y_true, y_preds, num_classes, writer):
     print('AUROC ovr:', auroc)
     return cr, cm
 
-def plot_cm(cm, class_names):
+def plot_cm(cm, class_names, save_path):
     plt.figure(figsize=(7, 5))
     cm_df = pd.DataFrame(cm, columns=class_names, index=class_names)
     sns.heatmap(cm_df, annot=True, fmt='g')
     plt.ylabel('True')
     plt.xlabel('Pred')
     plt.tight_layout()
-    plt.savefig('runs/gnn_auto/cm.png')
-    plt.show()
+    plt.savefig(save_path)
+    # plt.show()
