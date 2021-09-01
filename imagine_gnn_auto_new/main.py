@@ -46,8 +46,6 @@ def run_auto_gnn_model(run_number, random_seed, summary_dir, num_epochs, batch_s
     optimizer = torch.optim.Adam(model.parameters())
 
     # writer.add_graph(model, X_train[:batch_size])
-    print(model.node_embeddings)
-    print(model.identity)
 
     train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epochs, writer)
 
@@ -60,12 +58,18 @@ if __name__=='__main__':
     random_seed = 1
     n_runs = 5
     n_runs = [i for i in range(n_runs)]
-    num_epochs = 100
+    num_epochs = 1
     batch_size = 32
     seq_len = 100
     hidden_sizes = [256, 512, 256]
 
     for run_number in n_runs:
+        text = f'Run Number:{run_number}'
+        print('')
+        print('#'*len(text))
+        print(text)
+        print('#'*len(text))
+        print('')
         run_auto_gnn_model(run_number, random_seed, f'runs/gnn_auto_{run_number}', num_epochs, batch_size, seq_len, hidden_sizes)
     # run_number = '5_subjects'
     # run_auto_gnn_model(run_number, random_seed, f'runs/gnn_auto_{run_number}', num_epochs, batch_size, seq_len, hidden_sizes)
