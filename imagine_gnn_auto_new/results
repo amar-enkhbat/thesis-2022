@@ -1,0 +1,157 @@
+Auto GNN:
+(env) amar@amar-Inspiron-7577:~/Desktop/thesis-2022/imagine_gnn_auto_new$ python main.py 
+
+############
+Run Number:1
+############
+
+X original shape: (295008, 64)
+y original shape: (295008,)
+Seq len: 100
+X conversion shape: (2950, 64, 100)
+y conversion shape: (2950,)
+Training complete in 0m 37s
+Best val acc: 0.3288
+              precision    recall  f1-score   support
+
+           0     0.3114    0.4931    0.3817       144
+           1     0.3497    0.3931    0.3701       145
+           2     0.3804    0.2365    0.2917       148
+           3     0.3333    0.2230    0.2672       139
+
+    accuracy                         0.3368       576
+   macro avg     0.3437    0.3364    0.3277       576
+weighted avg     0.3441    0.3368    0.3280       576
+
+[[71 38 16 19]
+ [57 57 12 19]
+ [59 30 35 24]
+ [41 38 29 31]]
+AUROC ovo: 0.5576559339565462
+AUROC ovr: 0.5576559339565462
+Number of trainable parameters
+358404
+
+############
+Run Number:2
+############
+
+X original shape: (295008, 64)
+y original shape: (295008,)
+Seq len: 100
+X conversion shape: (2950, 64, 100)
+y conversion shape: (2950,)
+Training complete in 0m 37s
+Best val acc: 0.3153
+              precision    recall  f1-score   support
+
+           0     0.2958    0.2958    0.2958       142
+           1     0.3567    0.4150    0.3836       147
+           2     0.3141    0.3289    0.3213       149
+           3     0.3178    0.2464    0.2776       138
+
+    accuracy                         0.3229       576
+   macro avg     0.3211    0.3215    0.3196       576
+weighted avg     0.3213    0.3229    0.3204       576
+
+[[42 41 31 28]
+ [37 61 34 15]
+ [30 40 49 30]
+ [33 29 42 34]]
+AUROC ovo: 0.5477374195705489
+AUROC ovr: 0.5477374195705489
+Number of trainable parameters
+358404
+
+############
+Run Number:3
+############
+
+X original shape: (295008, 64)
+y original shape: (295008,)
+Seq len: 100
+X conversion shape: (2950, 64, 100)
+y conversion shape: (2950,)
+Training complete in 0m 37s
+Best val acc: 0.3254
+              precision    recall  f1-score   support
+
+           0     0.3176    0.3333    0.3253       141
+           1     0.3240    0.3973    0.3569       146
+           2     0.3072    0.3423    0.3238       149
+           3     0.4337    0.2571    0.3229       140
+
+    accuracy                         0.3333       576
+   macro avg     0.3456    0.3325    0.3322       576
+weighted avg     0.3448    0.3333    0.3323       576
+
+[[47 42 34 18]
+ [35 58 42 11]
+ [34 46 51 18]
+ [32 33 39 36]]
+AUROC ovo: 0.5549150098164111
+AUROC ovr: 0.5549150098164111
+Number of trainable parameters
+358404
+
+############
+Run Number:4
+############
+
+X original shape: (295008, 64)
+y original shape: (295008,)
+Seq len: 100
+X conversion shape: (2950, 64, 100)
+y conversion shape: (2950,)
+Training complete in 0m 37s
+Best val acc: 0.3441
+              precision    recall  f1-score   support
+
+           0     0.3523    0.4306    0.3875       144
+           1     0.4135    0.2986    0.3468       144
+           2     0.3214    0.3020    0.3114       149
+           3     0.3397    0.3813    0.3593       139
+
+    accuracy                         0.3524       576
+   macro avg     0.3567    0.3531    0.3513       576
+weighted avg     0.3566    0.3524    0.3508       576
+
+[[62 26 29 27]
+ [39 43 28 34]
+ [47 15 45 42]
+ [28 20 38 53]]
+AUROC ovo: 0.5686502606026277
+AUROC ovr: 0.5686502606026277
+Number of trainable parameters
+358404
+
+############
+Run Number:5
+############
+
+X original shape: (295008, 64)
+y original shape: (295008,)
+Seq len: 100
+X conversion shape: (2950, 64, 100)
+y conversion shape: (2950,)
+Training complete in 0m 37s
+Best val acc: 0.3305
+              precision    recall  f1-score   support
+
+           0     0.3288    0.3357    0.3322       143
+           1     0.3314    0.3836    0.3556       146
+           2     0.3796    0.3490    0.3636       149
+           3     0.3145    0.2826    0.2977       138
+
+    accuracy                         0.3385       576
+   macro avg     0.3386    0.3377    0.3373       576
+weighted avg     0.3391    0.3385    0.3380       576
+
+[[48 45 23 27]
+ [39 56 26 25]
+ [26 38 52 33]
+ [33 30 36 39]]
+AUROC ovo: 0.5585727703381008
+AUROC ovr: 0.5585727703381008
+Number of trainable parameters
+358404

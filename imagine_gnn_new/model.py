@@ -2,8 +2,11 @@ from layers_batchwise_2 import GraphConvolution
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+from utils import compute_adj_matrices
 
 class GCN(nn.Module):
     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes):
@@ -16,7 +19,8 @@ class GCN(nn.Module):
         self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
 
         # self.identity = torch.eye(n_nodes).to(device)
-        self.node_embeddings = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
+        self.node_embeddings = torch.from_numpy(compute_adj_matrices('n') + np.eye(64, dtype=np.float32)).to(device)
+        # print(self.node_embeddings)
     def forward(self, x):
         # A = F.softmax(F.relu(torch.mm(self.node_embeddings, self.node_embeddings.transpose(0, 1))), dim=1)
         # A = torch.add(A, self.identity)

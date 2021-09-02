@@ -25,7 +25,7 @@ writer = SummaryWriter('runs/fcn_timeseries')
 
 
 # %%
-X = pickle.load(open('../dataset/train/cross_subject_data_0.pickle', 'rb'))
+X = pickle.load(open('../dataset/train/cross_subject_data_5_subjects.pickle', 'rb'))
 y = X['train_y']
 
 X = X['train_x'].astype(np.float32)
@@ -186,7 +186,12 @@ model = FCN(input_size, hidden_size_1, hidden_size_2, hidden_size_3, num_classes
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 
-writer.add_graph(model, X_train)
+# writer.add_graph(model, X_train)
+for p in model.parameters():
+    if p.dim() > 1:
+        nn.init.xavier_uniform_(p)
+    else:
+        nn.init.uniform_(p)
 
 model = train_model(model, criterion, optimizer, num_epochs=num_epochs)
 

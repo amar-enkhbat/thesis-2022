@@ -197,7 +197,12 @@ model = FCN(input_size, hidden_size_1, hidden_size_2, num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 
-writer.add_graph(model, X_train[0])
+# writer.add_graph(model, X_train[0])
+for p in model.parameters():
+    if p.dim() > 1:
+        nn.init.xavier_uniform_(p)
+    else:
+        nn.init.uniform_(p)
 
 model = train_model(model, criterion, optimizer, num_epochs=20)
 

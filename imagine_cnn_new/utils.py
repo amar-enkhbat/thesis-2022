@@ -41,12 +41,12 @@ def prepare_data(X, y, seq_len, normalize):
 
     len_tail = X.shape[0] % seq_len
     if len_tail == 0:
-        X = X.reshape(-1, seq_len, n_channels)
-        X = np.moveaxis(X, 1, -1)
+        X = X.reshape(-1, 1, seq_len, n_channels)
+        X = np.moveaxis(X, 2, -1)
         y = y.reshape(-1, seq_len)
     else:
-        X = X[:-len_tail].reshape(-1, seq_len, n_channels)
-        X = np.moveaxis(X, 1, -1)
+        X = X[:-len_tail].reshape(-1, 1, seq_len, n_channels)
+        X = np.moveaxis(X, 2, -1)
         y = y[:-len_tail].reshape(-1, seq_len)
     y = y[:, -1]
     print('X conversion shape:', X.shape)

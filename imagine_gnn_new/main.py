@@ -43,7 +43,7 @@ def run_auto_gnn_model(run_number, random_seed, summary_dir, num_epochs, batch_s
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
 
-    writer.add_graph(model, torch.Tensor(X_test[:batch_size]))
+    # writer.add_graph(model, torch.Tensor(X_test[:batch_size]))
 
     model = model.to(device)
 

@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from utils import load_data, prepare_data, get_dataloaders, init_model_params, train_model, model_predict, print_classification_report, plot_cm, plot_adj
 
-from model import GCN
+from model import FCN
 
 def run_auto_gnn_model(run_number, random_seed, summary_dir, num_epochs, batch_size, seq_len, hidden_sizes):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -36,14 +36,14 @@ def run_auto_gnn_model(run_number, random_seed, summary_dir, num_epochs, batch_s
     num_classes = 4
     n_channels = 64
 
-    model = GCN(in_features=in_features, n_nodes=n_channels, num_classes=num_classes, hidden_sizes=hidden_sizes)
+    model = FCN(in_features=in_features, n_nodes=n_channels, num_classes=num_classes, hidden_sizes=hidden_sizes)
 
     model = init_model_params(model)
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
 
-    writer.add_graph(model, torch.Tensor(X_test[:batch_size]))
+    # writer.add_graph(model, torch.Tensor(X_test[:batch_size]))
 
     model = model.to(device)
 
@@ -54,8 +54,7 @@ def run_auto_gnn_model(run_number, random_seed, summary_dir, num_epochs, batch_s
     cr, cm = print_classification_report(y_test, y_preds, num_classes, writer)
 
     plot_cm(cm, class_names, os.path.join(summary_dir, 'cm.png'))
-    plot_adj(model.node_embeddings.cpu().detach().numpy(), os.path.join(summary_dir, 'adj.png'))
-
+    
     print('Number of trainable parameters')
     print(sum(p.numel() for p in model.parameters() if p.requires_grad))
     
