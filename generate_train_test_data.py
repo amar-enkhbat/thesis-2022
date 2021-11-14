@@ -4,7 +4,8 @@ import pandas as pd
 from tqdm import tqdm
 import random
 import pickle
-from tqdm import tqdm
+from sklearn.preprocessing import StandardScaler
+SCALER = StandardScaler()
 
 random_seed = 1
 random.seed(random_seed)
@@ -18,15 +19,24 @@ def create_cross_subject_data(train_idc, test_idc):
 
     for subject_id in train_idc:
         df = pd.read_csv(f"dataset/physionet.org_csv_full_imagine/{subject_id}_imagine.csv")
-        X_train = np.vstack((X_train, df.iloc[:, 3:].values))
-        y_train = np.hstack((y_train, df["label"].values))
+        values = df.iloc[:, 3:].values
+        labels = df["label"].values
+        # Normalize per subject NOT after concat
+        values = SCALER.fit_transform(values)
+        X_train = np.vstack((X_train, values))
+        y_train = np.hstack((y_train, labels))
+
 
     for subject_id in test_idc:
         df = pd.read_csv(f"dataset/physionet.org_csv_full_imagine/{subject_id}_imagine.csv")
-        X_test = np.vstack((X_test, df.iloc[:, 3:].values))
-        y_test = np.hstack((y_test, df["label"].values))
+        values = df.iloc[:, 3:].values
+        labels = df["label"].values
+        # Normalize per subject NOT after concat
+        values = SCALER.fit_transform(values)
+        X_test = np.vstack((X_test, values))
+        y_test = np.hstack((y_test, labels))
 
-    cross_subject_data = {"train_x": X_train, "train_y": y_train, "test_x": X_test, "test_y": y_test}
+    cross_subject_data = {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test}
     return cross_subject_data
 
 

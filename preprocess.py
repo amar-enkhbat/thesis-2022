@@ -118,7 +118,7 @@ diff_df.to_csv(os.path.join(save_path, "data_label_diff.csv"))
 
 # Note 1: subject 100 showed errors. 
 # we're ignoring subjects:
-# #88, 89, 92 100 anyway.
+# #88, 89, 92, 100 anyway.
 
 # Note 2: when len(raw_data.shape[0]) != len(raw_labels.shape[0]) the leftover dataframe is [0.] or [], when diff is positive or negative respectively
 # #88, 92, 100 has more labels than data

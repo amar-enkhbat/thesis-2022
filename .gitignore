@@ -4,10 +4,4 @@ dataset/
 .python-version
 *.pyc
 __pycache__/
-*.pickle
-imagine_on_cnn/
-runs/
-AGCRN/
-pytorch_tutorial/
-time_series_tutorial/
-pytorch_gcn/
+__init__.py
