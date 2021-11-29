@@ -13,7 +13,7 @@ PARAMS = {
     'N_CHANNELS': 64,
     'N_RUNS': N_RUNS,
     'RANDOM_SEEDS': RANDOM_SEEDS,
-    'N_EPOCHS': 100,
+    'N_EPOCHS': 2,
     'BATCH_SIZE': 32,
     'SEQ_LEN': 100,
     'FCN_HIDDEN_SIZES': [256, 512, 256],

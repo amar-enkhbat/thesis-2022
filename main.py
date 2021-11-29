@@ -4,6 +4,7 @@ import torch
 import numpy as np 
 from sklearn.model_selection import train_test_split
 from torch._C import device
+from torch.utils.data import dataset
 from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj
 from models import FCN, CNN, RNN, GCN, GCNAuto
 from params import PARAMS
@@ -32,14 +33,13 @@ def model_predict(model, test_loader, dataset_size):
 
     return y_preds, y_true
 
-def run_model(random_seed, model, results_path):    
+def run_model(random_seed, dataset_name, model, results_path):    
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
 
-    run_number = '5_subjects'
-    X, y, label_map = load_data(f'./dataset/train/cross_subject_data_{run_number}.pickle')
+    X, y, label_map = load_data(dataset_name)
     class_names = list(label_map.keys())
 
     if 'cnn' in results_path:
@@ -126,31 +126,25 @@ def eval_runs(model_names, random_seeds):
 
 if __name__=='__main__':
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
-    model_name = model_names[0]
+    
+    dataset_name = './dataset/train/cross_subject_data_5_subjects.pickle'
+    print('Dataset name:')
+    print(dataset_name)
 
     random_seeds = PARAMS['RANDOM_SEEDS']
     print('Random Seeds:')
     print(random_seeds)
+
     for model_name in tqdm(model_names):
-        # print('#' * 20)
-        # print(model_name.upper())
-        # print('#' * 20)
 
         for random_seed in random_seeds:
             results_path = os.path.join('output', model_name, str(random_seed))
-            # if not os.path.isdir('output'):
-            #     os.mkdir('output')
-            # if not os.path.isdir(os.path.join('output', model_name)):
-            #     os.mkdir(os.path.join('output', model_name))
-            # if not os.path.isdir(results_path):
-            #     os.mkdir(results_path)
             os.makedirs(results_path, exist_ok=True)
             with open(os.path.join(results_path, 'params.txt'), 'w') as f:
                 f.write(str(PARAMS))
             
-            
             model = model_picker(model_name, device=device)
-            run_model(random_seed, model, results_path)
+            run_model(random_seed=random_seed, dataset_name=dataset_name, model=model, results_path=results_path)
 
     final_results = eval_runs(model_names, random_seeds)
     for k, v in final_results.items():

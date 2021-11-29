@@ -4,10 +4,12 @@ import pandas as pd
 from tqdm import tqdm
 import random
 import pickle
+
 from sklearn.preprocessing import StandardScaler
 SCALER = StandardScaler()
 
-random_seed = 1
+from params import PARAMS
+random_seed = PARAMS['RANDOM_SEEDS'][0]
 random.seed(random_seed)
 np.random.seed(random_seed)
 
@@ -39,8 +41,7 @@ def create_cross_subject_data(train_idc, test_idc):
     cross_subject_data = {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test}
     return cross_subject_data
 
-
-if __name__ == "__main__":
+def main():
     exclusions = ["S088", "S089", "S092", "S100"]
     subjects_idc = [f"S{i:03d}" for i in range(1, 110)]
     subjects_idc = [i for i in subjects_idc if i not in exclusions]
@@ -51,5 +52,29 @@ if __name__ == "__main__":
     for i in tqdm(range(9)):
         test_idc = random.sample(subjects_idc, 10)
         train_idc = [i for i in subjects_idc if i not in test_idc]
+
+        with open(f"./dataset/train/cross_subject_data_{i}.txt", "w") as text_file:
+            idc_dict = {'train_idc': train_idc, 'test_idc': test_idc}
+            text_file.write(f"{str(idc_dict)}")
+
         cross_subject_data = create_cross_subject_data(train_idc, test_idc)
         pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}.pickle", "wb"))
+
+    # Example dataset with 5 subjects.
+    
+
+    for i in tqdm(range(9)):
+        train_idc = random.sample(subjects_idc, 5)
+        test_idc = [i for i in subjects_idc if i not in train_idc]
+        test_idc = list(np.random.choice(test_idc, 1))
+ 
+        with open(f"./dataset/train/cross_subject_data_{i}_5_subjects.txt", "w") as text_file:
+            idc_dict = {'train_idc': train_idc, 'test_idc': test_idc}
+            text_file.write(f"{str(idc_dict)}")
+
+        cross_subject_data = create_cross_subject_data(train_idc, test_idc)
+        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}_5_subjects.pickle", "wb"))
+
+
+if __name__ == "__main__":
+    main()
