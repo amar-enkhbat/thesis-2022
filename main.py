@@ -141,8 +141,8 @@ if __name__=='__main__':
                 with open(os.path.join(results_path, 'params.txt'), 'w') as f:
                     f.write(str(PARAMS))
                 
-                # model = model_picker(model_name, device=PARAMS['DEVICE'])
-                # run_model(random_seed=random_seed, dataset_name=dataset_name, model=model, results_path=results_path)
+                model = model_picker(model_name, device=PARAMS['DEVICE'])
+                run_model(random_seed=random_seed, dataset_name=dataset_name, model=model, results_path=results_path)
 
     final_results = eval_runs(model_names, dataset_names, random_seeds)
     for k, v in final_results.items():
