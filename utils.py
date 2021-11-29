@@ -22,10 +22,6 @@ def load_data(dataset_path):
 def prepare_data(X, y, seq_len):
     n_channels = X.shape[1]
 
-    print('X original shape:', X.shape)
-    print('y original shape:', y.shape)
-    print('Seq len:', seq_len)
-
     len_tail = X.shape[0] % seq_len
     if len_tail == 0:
         X = X.reshape(-1, seq_len, n_channels)
@@ -36,16 +32,11 @@ def prepare_data(X, y, seq_len):
         X = np.moveaxis(X, 1, -1)
         y = y[:-len_tail].reshape(-1, seq_len)
     y = y[:, -1]
-    print('X conversion shape:', X.shape)
-    print('y conversion shape:', y.shape)
+
     return X, y
 
 def prepare_data_cnn(X, y, seq_len):
     n_channels = X.shape[1]
-
-    print('X original shape:', X.shape)
-    print('y original shape:', y.shape)
-    print('Seq len:', seq_len)
 
     len_tail = X.shape[0] % seq_len
     if len_tail == 0:
@@ -57,16 +48,11 @@ def prepare_data_cnn(X, y, seq_len):
         X = np.moveaxis(X, 2, -1)
         y = y[:-len_tail].reshape(-1, seq_len)
     y = y[:, -1]
-    print('X conversion shape:', X.shape)
-    print('y conversion shape:', y.shape)
+
     return X, y
 
 def prepare_data_rnn(X, y, seq_len):
     n_channels = X.shape[1]
-
-    print('X original shape:', X.shape)
-    print('y original shape:', y.shape)
-    print('Seq len:', seq_len)
 
     len_tail = X.shape[0] % seq_len
     if len_tail == 0:
@@ -78,20 +64,15 @@ def prepare_data_rnn(X, y, seq_len):
         X = np.moveaxis(X, 1, -1)
         y = y[:-len_tail].reshape(-1, seq_len)
     y = y[:, -1]
-    print('X conversion shape:', X.shape)
-    print('y conversion shape:', y.shape)
+
     return X, y
 
 
 
 def print_classification_report(y_true, y_preds, num_classes, class_names):
-    
-    cr = classification_report(y_true, y_preds, digits=4, target_names=class_names)
-    print(cr)
     cr = classification_report(y_true, y_preds, output_dict=True, target_names=class_names)
 
     cm = confusion_matrix(y_true, y_preds)
-    print(cm)
 
     y_preds_ohe = np.zeros((len(y_preds), num_classes))
     for i, j in enumerate(y_preds):
@@ -101,10 +82,8 @@ def print_classification_report(y_true, y_preds, num_classes, class_names):
     for i, j in enumerate(y_true):
         y_true_ohe[i, j] = 1
     auroc = roc_auc_score(y_true_ohe, y_preds_ohe, multi_class='ovo')
-    print('AUROC ovo:', auroc)
-    auroc = roc_auc_score(y_true_ohe, y_preds_ohe, multi_class='ovr')
-    print('AUROC ovr:', auroc)
-    return cr, cm
+
+    return cr, cm, auroc
 
 def plot_history(history, save_path):
     df = pd.DataFrame(history)
@@ -123,6 +102,8 @@ def plot_cm(cm, class_names, save_path):
     plt.tight_layout()
     plt.savefig(os.path.join(save_path, 'cm.png'))
     # plt.show()
+    plt.clf()
+    plt.close()
 
 def plot_adj(adj, save_path):
     plt.figure(figsize=(7, 5))
@@ -132,3 +113,5 @@ def plot_adj(adj, save_path):
     plt.tight_layout()
     plt.savefig(os.path.join(save_path, 'adj.png'))
     # plt.show()
+    plt.clf()
+    plt.close()

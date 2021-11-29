@@ -11,6 +11,7 @@ from train import get_dataloaders, train_model, init_model_params
 from sklearn.metrics import accuracy_score
 
 import pickle
+from tqdm import tqdm
 
 def model_predict(model, test_loader, dataset_size):
     model.eval()
@@ -24,10 +25,6 @@ def model_predict(model, test_loader, dataset_size):
 
             y_preds.append(preds)
             y_true.append(labels)
-            running_corrects += torch.sum(preds == labels)
-        acc = running_corrects / dataset_size
-        print('Best Accuracy:')
-        print(acc.tolist())
 
     y_preds = torch.cat(y_preds).tolist()
     y_true = torch.cat(y_true).tolist()
@@ -65,10 +62,7 @@ def run_model(random_seed, model, results_path):
 
     y_preds, y_test = model_predict(best_model, test_loader=dataloaders['val'], dataset_size=dataset_sizes['val'])
 
-    print('Accuracy score:')
-    print(accuracy_score(y_test, y_preds))
-
-    cr, cm = print_classification_report(y_test, y_preds, PARAMS['N_CLASSES'], class_names)
+    cr, cm, auroc = print_classification_report(y_test, y_preds, PARAMS['N_CLASSES'], class_names)
 
     plot_history(history, results_path)
     plot_cm(cm, class_names, results_path)
@@ -76,9 +70,8 @@ def run_model(random_seed, model, results_path):
         plot_adj(model.node_embeddings.cpu().detach().numpy(), results_path)
     
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print('Number of trainable parameters')
-    print(n_params)
-    results = {'history': history, 'cm': cm.tolist(), 'cr': cr, 'n_params': n_params, 'class_names': class_names}
+
+    results = {'history': history, 'cm': cm.tolist(), 'cr': cr,'auroc': auroc , 'n_params': n_params, 'class_names': class_names}
     with open(os.path.join(results_path, 'results.pickle'), 'wb') as f:
         pickle.dump(results, f)
 
@@ -112,8 +105,9 @@ def eval_runs(model_names, random_seeds):
         precs_weighted = []
         recalls_macro = []
         recalls_weighted = []
+        aurocs = []
         n_trainable_params = []
-        
+
         for random_seed in random_seeds:
             path = os.path.join('./output', model_name, str(random_seed), 'results.pickle')
             results = pickle.load(open(path, 'rb'))
@@ -123,9 +117,10 @@ def eval_runs(model_names, random_seeds):
             precs_weighted.append(results['cr']['weighted avg']['precision'])
             recalls_macro.append(results['cr']['macro avg']['recall'])
             recalls_weighted.append(results['cr']['weighted avg']['recall'])
+            aurocs.append(results['auroc'])
             n_trainable_params.append(results['n_params'])
 
-        result = {'accuracy': average(accs), 'precision_macro': average(precs_macro), 'precision_weighted': average(precs_weighted), 'recall_macro': average(recalls_macro), 'recall_weighted': average(recalls_macro), 'n_params': average(n_trainable_params)}
+        result = {'accuracy': [np.mean(accs), np.std(accs)], 'precision_macro': [np.mean(precs_macro), np.std(precs_macro)], 'precision_weighted': [np.mean(precs_weighted), np.std(precs_weighted)], 'recall_macro': [np.mean(recalls_macro), np.std(recalls_macro)], 'recall_weighted': [np.mean(recalls_weighted), np.std(recalls_weighted)], 'auroc': [np.mean(aurocs), np.std(aurocs)], 'n_params': average(n_trainable_params)}
         final_result[model_name] = result
     return final_result
 
@@ -134,12 +129,12 @@ if __name__=='__main__':
     model_name = model_names[0]
 
     random_seeds = PARAMS['RANDOM_SEEDS']
-    random_seed = random_seeds[0]
-
-    for model_name in model_names:
-        print('#' * 20)
-        print(model_name.upper())
-        print('#' * 20)
+    print('Random Seeds:')
+    print(random_seeds)
+    for model_name in tqdm(model_names):
+        # print('#' * 20)
+        # print(model_name.upper())
+        # print('#' * 20)
 
         for random_seed in random_seeds:
             results_path = os.path.join('output', model_name, str(random_seed))

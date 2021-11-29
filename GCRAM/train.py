@@ -27,16 +27,16 @@ model = 'ng_cram'
 
 # data = sio.loadmat("./cross_subject_data_"+str(file_num)+".mat")
 data = pickle.load(open("../dataset/train/cross_subject_data_0.pickle", "rb"))
-
-test_X	= data["test_x"]
-train_X	= data["train_x"]
-print("test_X shape:")
+print(data.keys())
+test_X	= data["X_test"]
+train_X	= data["X_train"]
+print("X_test shape:")
 print(test_X.shape)
-print("train_X shape:")
+print("X_train shape:")
 print(train_X.shape)
 
-test_y	= data["test_y"].ravel()
-train_y = data["train_y"].ravel()
+test_y	= data["y_test"].ravel()
+train_y = data["y_train"].ravel()
 print("test_y shape:")
 print(test_y.shape)
 print("train_X shape:")

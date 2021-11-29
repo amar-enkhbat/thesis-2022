@@ -174,7 +174,6 @@ def compute_adj_matrices(type):
         if "pO" in ch_name:
             ch_name = ch_name.replace("pO", "PO")
         ch_pos_1010[ch_name_orig] = ch_pos_1020[ch_name]
-    print(len(ch_pos_1010))
 
     ch_pos_1010_names = []
     ch_pos_1010_dist = []

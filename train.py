@@ -43,13 +43,13 @@ def train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epo
     val_acc = torch.zeros(num_epochs)
 
     for epoch in range(num_epochs):
-        print(f'Epoch {epoch}/{num_epochs-1}')
-        print('-' * 10)
+        # print(f'Epoch {epoch}/{num_epochs-1}')
+        # print('-' * 10)
 
         for phase in ['train', 'val']:
-            print('#' * len(phase))
-            print(phase)
-            print('#' * len(phase))
+            # print('#' * len(phase))
+            # print(phase)
+            # print('#' * len(phase))
             if phase == 'train':
                 model.train()
             else:
@@ -83,17 +83,17 @@ def train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epo
             elif phase == 'val':
                 val_acc[epoch] = epoch_acc
                 val_loss[epoch] = epoch_loss
-            print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
+            # print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
 
-        print()
+        # print()
 
     time_elapsed = time.time() - since
-    print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed%60:.0f}s')
-    print(f'Best val acc: {best_acc:.4f}')
+    # print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed%60:.0f}s')
+    # print(f'Best val acc: {best_acc:.4f}')
 
     model.load_state_dict(best_model_wts)
     
