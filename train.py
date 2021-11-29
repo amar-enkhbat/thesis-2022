@@ -5,26 +5,28 @@ import time
 import copy
 import random
 import numpy as np
+from params import PARAMS
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-def get_dataloaders(X_train, y_train, X_test, y_test, batch_size, random_seed):
+def get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, batch_size, random_seed):
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
 
-    X_train, y_train = torch.tensor(X_train).to(device), torch.tensor(y_train).to(device)
-    X_test, y_test = torch.tensor(X_test).to(device), torch.tensor(y_test).to(device)
+    X_train, y_train = torch.tensor(X_train).to(PARAMS['DEVICE']), torch.tensor(y_train).to(PARAMS['DEVICE'])
+    X_valid, y_valid = torch.tensor(X_valid).to(PARAMS['DEVICE']), torch.tensor(y_valid).to(PARAMS['DEVICE'])
+    X_test, y_test = torch.tensor(X_test).to(PARAMS['DEVICE']), torch.tensor(y_test).to(PARAMS['DEVICE'])
 
     train_dataset = TensorDataset(X_train, y_train)
+    valid_dataset = TensorDataset(X_valid, y_valid)
     test_dataset = TensorDataset(X_test, y_test)
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size, drop_last=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, drop_last=True)
 
-    dataset_sizes = {'train': len(train_dataset), 'val': len(test_dataset)}
-    dataloaders = {'train': train_loader, 'val': test_loader}
+    dataset_sizes = {'train': len(train_dataset), 'val': len(valid_dataset), 'test': len(test_dataset)}
+    dataloaders = {'train': train_loader, 'val': valid_loader, 'test': test_loader}
     return dataloaders, dataset_sizes
 
 def train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epochs, random_seed):
@@ -59,8 +61,8 @@ def train_model(dataloaders, dataset_sizes, model, criterion, optimizer, num_epo
             running_corrects = 0.0
 
             for inputs, labels in dataloaders[phase]:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+                inputs = inputs.to(PARAMS['DEVICE'])
+                labels = labels.to(PARAMS['DEVICE'])
 
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)

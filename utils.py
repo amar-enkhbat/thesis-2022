@@ -9,15 +9,17 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 
 def load_data(dataset_path):
-    X = pickle.load(open(dataset_path, 'rb'))
-    y = X['train_y']
-
-    X = X['train_x'].astype(np.float32)
+    dataset = pickle.load(open(dataset_path, 'rb'))
+    y_train = dataset['y_train']
+    X_train = dataset['X_train'].astype(np.float32)
+    y_test = dataset['y_train']
+    X_test = dataset['X_train'].astype(np.float32)
 
     label_map = {'imagine_both_feet': 0, 'imagine_both_fist': 1, 'imagine_left_fist': 2, 'imagine_right_fist': 3}
-    y = np.vectorize(label_map.__getitem__)(y)
+    y_train = np.vectorize(label_map.__getitem__)(y_train)
+    y_test = np.vectorize(label_map.__getitem__)(y_test)
 
-    return X, y, label_map
+    return X_train, y_train, X_test, y_test, label_map
 
 def prepare_data(X, y, seq_len):
     n_channels = X.shape[1]

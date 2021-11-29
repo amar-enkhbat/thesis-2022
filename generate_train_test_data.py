@@ -49,7 +49,7 @@ def main():
     if not os.path.isdir("./dataset/train"):
         os.mkdir("./dataset/train")
 
-    for i in tqdm(range(9)):
+    for i in tqdm(range(10)):
         test_idc = random.sample(subjects_idc, 10)
         train_idc = [i for i in subjects_idc if i not in test_idc]
 
@@ -63,7 +63,7 @@ def main():
     # Example dataset with 5 subjects.
     
 
-    for i in tqdm(range(9)):
+    for i in tqdm(range(10)):
         train_idc = random.sample(subjects_idc, 5)
         test_idc = [i for i in subjects_idc if i not in train_idc]
         test_idc = list(np.random.choice(test_idc, 1))

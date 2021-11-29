@@ -3,23 +3,19 @@ import random
 import torch
 import numpy as np 
 from sklearn.model_selection import train_test_split
-from torch._C import device
-from torch.utils.data import dataset
 from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj
 from models import FCN, CNN, RNN, GCN, GCNAuto
 from params import PARAMS
 from train import get_dataloaders, train_model, init_model_params
-from sklearn.metrics import accuracy_score
 
 import pickle
 from tqdm import tqdm
 
-def model_predict(model, test_loader, dataset_size):
+def model_predict(model, test_loader):
     model.eval()
     with torch.no_grad():
         y_preds = []
         y_true = []
-        running_corrects = 0.0
         for inputs, labels in test_loader:
             outputs = model(inputs)
             _, preds = torch.max(outputs, 1)
@@ -39,28 +35,32 @@ def run_model(random_seed, dataset_name, model, results_path):
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
 
-    X, y, label_map = load_data(dataset_name)
+    X_train, y_train, X_test, y_test, label_map = load_data(dataset_name)
     class_names = list(label_map.keys())
 
     if 'cnn' in results_path:
-        X, y = prepare_data_cnn(X, y, PARAMS['SEQ_LEN'])
+        X_train, y_train = prepare_data_cnn(X_train, y_train, PARAMS['SEQ_LEN'])
+        X_test, y_test = prepare_data_cnn(X_test, y_test, PARAMS['SEQ_LEN'])
     elif 'rnn' in results_path:
-        X, y = prepare_data_rnn(X, y, PARAMS['SEQ_LEN'])
+        X_train, y_train = prepare_data_rnn(X_train, y_train, PARAMS['SEQ_LEN'])
+        X_test, y_test = prepare_data_rnn(X_test, y_test, PARAMS['SEQ_LEN'])
     elif 'gcn' in results_path:
-        X, y = prepare_data(X, y, PARAMS['SEQ_LEN'])
+        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
+        X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
     elif 'fcn' in results_path:
-        X, y = prepare_data(X, y, PARAMS['SEQ_LEN'])
+        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
+        X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=PARAMS['TEST_SIZE'], random_state=random_seed, stratify=y)
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], random_state=random_seed, stratify=y_train)
 
-    dataloaders, dataset_sizes = get_dataloaders(X_train, y_train, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed)
+    dataloaders, dataset_sizes = get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed)
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
 
     best_model, history = train_model(dataloaders, dataset_sizes, model, criterion, optimizer, PARAMS['N_EPOCHS'], random_seed=random_seed)
 
-    y_preds, y_test = model_predict(best_model, test_loader=dataloaders['val'], dataset_size=dataset_sizes['val'])
+    y_preds, y_test = model_predict(best_model, test_loader=dataloaders['test'])
 
     cr, cm, auroc = print_classification_report(y_test, y_preds, PARAMS['N_CLASSES'], class_names)
 
@@ -77,8 +77,6 @@ def run_model(random_seed, dataset_name, model, results_path):
 
 
 def model_picker(model_name, device):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     if model_name == 'imagine_fcn':
         model = FCN(in_features=PARAMS['SEQ_LEN'], num_classes=PARAMS['N_CLASSES'], n_nodes=PARAMS['N_CHANNELS'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_cnn':
@@ -97,56 +95,56 @@ def model_picker(model_name, device):
 def average(lst):
     return sum(lst) / len(lst)
 
-def eval_runs(model_names, random_seeds):
+def eval_runs(model_names, dataset_names, random_seeds):
     final_result = {}
-    for model_name in model_names:
-        accs = []
-        precs_macro = []
-        precs_weighted = []
-        recalls_macro = []
-        recalls_weighted = []
-        aurocs = []
-        n_trainable_params = []
+    for dataset_name in dataset_names:
+        for model_name in model_names:
+            accs = []
+            precs_macro = []
+            precs_weighted = []
+            recalls_macro = []
+            recalls_weighted = []
+            aurocs = []
+            n_trainable_params = []
 
-        for random_seed in random_seeds:
-            path = os.path.join('./output', model_name, str(random_seed), 'results.pickle')
-            results = pickle.load(open(path, 'rb'))
+            for random_seed in random_seeds:
+                path = os.path.join('output', model_name, dataset_name.rstrip('.pickle').lstrip('./dataset/train/'), str(random_seed), 'results.pickle')
+                results = pickle.load(open(path, 'rb'))
 
-            accs.append(results['cr']['accuracy'])
-            precs_macro.append(results['cr']['macro avg']['precision'])
-            precs_weighted.append(results['cr']['weighted avg']['precision'])
-            recalls_macro.append(results['cr']['macro avg']['recall'])
-            recalls_weighted.append(results['cr']['weighted avg']['recall'])
-            aurocs.append(results['auroc'])
-            n_trainable_params.append(results['n_params'])
+                accs.append(results['cr']['accuracy'])
+                precs_macro.append(results['cr']['macro avg']['precision'])
+                precs_weighted.append(results['cr']['weighted avg']['precision'])
+                recalls_macro.append(results['cr']['macro avg']['recall'])
+                recalls_weighted.append(results['cr']['weighted avg']['recall'])
+                aurocs.append(results['auroc'])
+                n_trainable_params.append(results['n_params'])
 
-        result = {'accuracy': [np.mean(accs), np.std(accs)], 'precision_macro': [np.mean(precs_macro), np.std(precs_macro)], 'precision_weighted': [np.mean(precs_weighted), np.std(precs_weighted)], 'recall_macro': [np.mean(recalls_macro), np.std(recalls_macro)], 'recall_weighted': [np.mean(recalls_weighted), np.std(recalls_weighted)], 'auroc': [np.mean(aurocs), np.std(aurocs)], 'n_params': average(n_trainable_params)}
-        final_result[model_name] = result
+            result = {'accuracy': [np.mean(accs), np.std(accs)], 'precision_macro': [np.mean(precs_macro), np.std(precs_macro)], 'precision_weighted': [np.mean(precs_weighted), np.std(precs_weighted)], 'recall_macro': [np.mean(recalls_macro), np.std(recalls_macro)], 'recall_weighted': [np.mean(recalls_weighted), np.std(recalls_weighted)], 'auroc': [np.mean(aurocs), np.std(aurocs)], 'n_params': average(n_trainable_params)}
+            final_result[model_name] = result
     return final_result
 
 if __name__=='__main__':
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
-    
-    dataset_name = './dataset/train/cross_subject_data_5_subjects.pickle'
-    print('Dataset name:')
-    print(dataset_name)
+
+    dataset_names = [f'./dataset/train/cross_subject_data_{i}_5_subjects.pickle' for i in range(5)]
+    print(dataset_names)
 
     random_seeds = PARAMS['RANDOM_SEEDS']
     print('Random Seeds:')
     print(random_seeds)
 
-    for model_name in tqdm(model_names):
+    for dataset_name in dataset_names:
+        for model_name in tqdm(model_names):
+            for random_seed in random_seeds:
+                results_path = os.path.join('output', model_name, dataset_name.rstrip('.pickle').lstrip('./dataset/train/'), str(random_seed))
+                os.makedirs(results_path, exist_ok=True)
+                with open(os.path.join(results_path, 'params.txt'), 'w') as f:
+                    f.write(str(PARAMS))
+                
+                # model = model_picker(model_name, device=PARAMS['DEVICE'])
+                # run_model(random_seed=random_seed, dataset_name=dataset_name, model=model, results_path=results_path)
 
-        for random_seed in random_seeds:
-            results_path = os.path.join('output', model_name, str(random_seed))
-            os.makedirs(results_path, exist_ok=True)
-            with open(os.path.join(results_path, 'params.txt'), 'w') as f:
-                f.write(str(PARAMS))
-            
-            model = model_picker(model_name, device=device)
-            run_model(random_seed=random_seed, dataset_name=dataset_name, model=model, results_path=results_path)
-
-    final_results = eval_runs(model_names, random_seeds)
+    final_results = eval_runs(model_names, dataset_names, random_seeds)
     for k, v in final_results.items():
         print(k)
         print(v)
