@@ -126,7 +126,7 @@ def eval_runs(model_names, dataset_names, random_seeds):
 if __name__=='__main__':
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
 
-    dataset_names = [f'./dataset/train/cross_subject_data_{i}_5_subjects.pickle' for i in range(5)]
+    dataset_names = [f'./dataset/train/cross_subject_data_{i}.pickle' for i in range(2)]
     print(dataset_names)
 
     random_seeds = PARAMS['RANDOM_SEEDS']
