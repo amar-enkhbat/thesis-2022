@@ -3,8 +3,8 @@ import random
 import torch
 import numpy as np 
 from sklearn.model_selection import train_test_split
-from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj
-from models import FCN, CNN, RNN, GCN, GCNAuto
+from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj, plot_adj_sym
+from models import FCN, CNN, RNN, GCN, GCNAuto, GCNAuto_2
 from params import PARAMS
 from train import get_dataloaders, train_model, init_model_params
 
@@ -51,7 +51,7 @@ def run_model(random_seed, dataset_name, model, results_path):
         X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
         X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
 
-    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], random_state=random_seed, stratify=y_train)
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed, stratify=y_train)
 
     dataloaders, dataset_sizes = get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed)
 
@@ -68,6 +68,8 @@ def run_model(random_seed, dataset_name, model, results_path):
     plot_cm(cm, class_names, results_path)
     if 'gcn' in results_path:
         plot_adj(model.node_embeddings.cpu().detach().numpy(), results_path)
+        A = torch.mm(model.node_embeddings, model.node_embeddings.T)
+        plot_adj_sym(A.cpu().detach().numpy(), results_path)
     
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -87,6 +89,8 @@ def model_picker(model_name, device):
         model = GCN(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_gcn_auto':
         model = GCNAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+    elif model_name == 'imagine_gcn_auto_2':
+        model = GCNAuto_2(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     model = model.to(device)
     model = init_model_params(model, random_seed=random_seed)
 
@@ -126,16 +130,20 @@ def eval_runs(model_names, dataset_names, random_seeds):
 if __name__=='__main__':
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
 
-    dataset_names = [f'./dataset/train/cross_subject_data_{i}.pickle' for i in range(2)]
+    dataset_names = [f'./dataset/train/cross_subject_data_{i}_5_subjects.pickle' for i in range(2)]
     print(dataset_names)
 
     random_seeds = PARAMS['RANDOM_SEEDS']
     print('Random Seeds:')
     print(random_seeds)
 
-    for dataset_name in dataset_names:
+    # For testing
+    model_names = ['imagine_gcn_auto']
+    random_seeds = PARAMS['RANDOM_SEEDS'][:2]
+
+    for dataset_name in tqdm(dataset_names):
         for model_name in tqdm(model_names):
-            for random_seed in random_seeds:
+            for random_seed in tqdm(random_seeds):
                 results_path = os.path.join('output', model_name, dataset_name.rstrip('.pickle').lstrip('./dataset/train/'), str(random_seed))
                 os.makedirs(results_path, exist_ok=True)
                 with open(os.path.join(results_path, 'params.txt'), 'w') as f:

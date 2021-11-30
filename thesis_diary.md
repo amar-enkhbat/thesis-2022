@@ -28,3 +28,46 @@ Try graph regression on eeg dataset
 
 GCN smoothes graph, denoise2 (eigen)
 
+# Effect of formula on model
+1.
+A = torch.softmax(torch.relu(torch.mm(self.node_embeddings, self.node_embeddings.T)), dim=1)
+A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
+
+{'accuracy': [0.25577445652173914, 0.0], 'precision_macro': [0.06394361413043478, 0.0], 'precision_weighted': [0.06542057260899102, 0.0], 'recall_macro': [0.25, 0.0], 'recall_weighted': [0.25577445652173914, 0.0], 'auroc': [0.5, 0.0], 'n_params': 358404.0}
+
+2.
+A = torch.softmax(torch.mm(self.node_embeddings, self.node_embeddings.T), dim=1)
+A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
+
+{'accuracy': [0.25577445652173914, 0.0], 'precision_macro': [0.06394361413043478, 0.0], 'precision_weighted': [0.06542057260899102, 0.0], 'recall_macro': [0.25, 0.0], 'recall_weighted': [0.25577445652173914, 0.0], 'auroc': [0.5, 0.0], 'n_params': 358404.0}
+
+3.
+A = torch.softmax(torch.relu(torch.mm(self.node_embeddings, self.node_embeddings.T)), dim=1)
+# A = F.dropout(A, 0.5)
+# A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
+{'accuracy': [0.25577445652173914, 0.0], 'precision_macro': [0.06394361413043478, 0.0], 'precision_weighted': [0.06542057260899102, 0.0], 'recall_macro': [0.25, 0.0], 'recall_weighted': [0.25577445652173914, 0.0], 'auroc': [0.5, 0.0], 'n_params': 358404.0}
+
+4.
+A = torch.mm(self.node_embeddings, self.node_embeddings.T)
+# A = F.dropout(A, 0.5)
+A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
+
+{'accuracy': [0.8629415760869565, 0.002547554347826053], 'precision_macro': [0.8631925246512202, 0.0024915543063956935], 'precision_weighted': [0.8632570094306171, 0.0023508164033215206], 'recall_macro': [0.8629210190911619, 0.0025968625407968293], 'recall_weighted': [0.8629415760869565, 0.002547554347826053], 'auroc': [0.9086192260419412, 0.001714180345783023], 'n_params': 358404.0}
+
+5. 
+A = torch.relu(torch.mm(self.node_embeddings, self.node_embeddings.T))
+# A = F.dropout(A, 0.5)
+A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
+
+{'accuracy': [0.5315896739130435, 0.2758152173913043], 'precision_macro': [0.4371952174956075, 0.3732516033651727], 'precision_weighted': [0.4378306766591711, 0.37241010405018005], 'recall_macro': [0.5286948349196608, 0.27869483491966085], 'recall_weighted': [0.5315896739130435, 0.2758152173913043], 'auroc': [0.6857904820388758, 0.18579048203887588], 'n_params': 358404.0}
+
+6. 
+A = torch.mm(self.node_embeddings, self.node_embeddings.T)
+# A = F.dropout(A, 0.5)
+# A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
+
+{'accuracy': [0.8597146739130435, 0.006793478260869568], 'precision_macro': [0.8598253200928478, 0.006813400420683624], 'precision_weighted': [0.8598509356878725, 0.006860863633053771], 'recall_macro': [0.8597422232907069, 0.00681701386837652], 'recall_weighted': [0.8597146739130435, 0.006793478260869568], 'auroc': [0.9064897905135753, 0.004544208998366606], 'n_params': 358404.0}
+
+7. Imagine auto
+
+{'accuracy': [0.8603940217391304, 0.01392663043478265], 'precision_macro': [0.8653031631442476, 0.01082569438824893], 'precision_weighted': [0.8654758799112537, 0.01050739246207566], 'recall_macro': [0.8605162983166408, 0.013740539527024198], 'recall_weighted': [0.8603940217391304, 0.01392663043478265], 'auroc': [0.9070006593133121, 0.009169711073037878], 'n_params': 358404.0}

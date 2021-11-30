@@ -117,3 +117,14 @@ def plot_adj(adj, save_path):
     # plt.show()
     plt.clf()
     plt.close()
+
+def plot_adj_sym(adj, save_path):
+    plt.figure(figsize=(7, 5))
+    sns.heatmap(adj, fmt='g')
+    plt.ylabel('True')
+    plt.xlabel('Pred')
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_path, 'adj_sym.png'))
+    # plt.show()
+    plt.clf()
+    plt.close()
