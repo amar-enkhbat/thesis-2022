@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj, plot_adj_sym
-from models import FCN, CNN, RNN, GCN, GCNAuto, GCNAuto_2
+from models import FCN, CNN, RNN, GCN, GCNAuto
 from params import PARAMS
 from train import get_dataloaders, train_model, init_model_params
 
