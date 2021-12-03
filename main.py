@@ -91,8 +91,6 @@ def model_picker(model_name, device):
         model = GCN(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_gcn_auto':
         model = GCNAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
-    elif model_name == 'imagine_gcn_auto_2':
-        model = GCNAuto_2(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     model = model.to(device)
     model = init_model_params(model, random_seed=random_seed)
 
@@ -151,7 +149,7 @@ def show_metrics(model_names, dataset_names, random_seeds):
     print(results_per_model)
 
 if __name__=='__main__':
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcn_auto_2']
+    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
 
     dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
     print(dataset_names)

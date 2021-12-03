@@ -115,46 +115,6 @@ class GCNAuto(nn.Module):
         self.node_embeddings = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
     def forward(self, x):
         # A = F.softmax(F.relu(torch.mm(self.node_embeddings, self.node_embeddings.transpose(0, 1))), dim=1)
-        # A = F.sigmoid(F.relu(torch.mm(self.node_embeddings, self.node_embeddings.transpose(0, 1))))
-        # A = F.dropout(A, 0.5)
-        # A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
-
-        # x dim: [N, n_nodes, node_feat]
-        # x_dim: [32, 64, 100]
-        # print('Node embeddings:')
-        # print(self.node_embeddings.shape)
-        out = F.relu(self.gc1(x, self.node_embeddings))
-        self.dropout = nn.Dropout()
-        # [N, n_nodes, out_features]
-        out = F.relu(self.gc2(out, self.node_embeddings))
-        self.dropout = nn.Dropout()
-        out = F.relu(self.gc3(out, self.node_embeddings))
-        self.dropout = nn.Dropout()
-
-        # out = F.relu(self.gc1(x, A))
-        # # [N, n_nodes, out_features]
-        # out = F.relu(self.gc2(out, A))
-        # out = F.relu(self.gc3(out, A))
-
-        out = self.flatten(out)
-        out = self.linear(out)
-
-        return out
-
-class GCNAuto_2(nn.Module):
-    def __init__(self, in_features, n_nodes, num_classes, hidden_sizes):
-        super(GCNAuto_2, self).__init__()
-        self.gc1 = GraphConvolutionAuto(in_features, hidden_sizes[0], n_nodes)
-        self.gc2 = GraphConvolutionAuto(hidden_sizes[0], hidden_sizes[1], n_nodes)
-        self.gc3 = GraphConvolutionAuto(hidden_sizes[1], hidden_sizes[2], n_nodes)
-
-        self.dropout = nn.Dropout()
-        self.flatten = nn.Flatten()
-        self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
-
-        self.node_embeddings = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
-    def forward(self, x):
-        # A = F.softmax(F.relu(torch.mm(self.node_embeddings, self.node_embeddings.transpose(0, 1))), dim=1)
         A = torch.mm(self.node_embeddings, self.node_embeddings.T)
         # A = F.dropout(A, 0.5)
         # A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
