@@ -71,3 +71,9 @@ A = torch.mm(self.node_embeddings, self.node_embeddings.T)
 7. Imagine auto
 
 {'accuracy': [0.8603940217391304, 0.01392663043478265], 'precision_macro': [0.8653031631442476, 0.01082569438824893], 'precision_weighted': [0.8654758799112537, 0.01050739246207566], 'recall_macro': [0.8605162983166408, 0.013740539527024198], 'recall_weighted': [0.8603940217391304, 0.01392663043478265], 'auroc': [0.9070006593133121, 0.009169711073037878], 'n_params': 358404.0}
+
+
+
+# Choosing subjects randomly
+When picking 5 subjects for training and 1 for testing, some subjects overlap.
+Originally decided to create mutually exclusive train and test sets but decided to not.

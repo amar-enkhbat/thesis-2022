@@ -2,6 +2,7 @@ import os
 import random
 import torch
 import numpy as np 
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj, plot_adj_sym
 from models import FCN, CNN, RNN, GCN, GCNAuto, GCNAuto_2
@@ -9,6 +10,7 @@ from params import PARAMS
 from train import get_dataloaders, train_model, init_model_params
 
 import pickle
+import json
 from tqdm import tqdm
 
 def model_predict(model, test_loader):
@@ -34,8 +36,8 @@ def run_model(random_seed, dataset_name, model, results_path):
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
-
-    X_train, y_train, X_test, y_test, label_map = load_data(dataset_name)
+    dataset_path = os.path.join('./dataset/train', dataset_name + '.pickle')
+    X_train, y_train, X_test, y_test, label_map = load_data(dataset_path)
     class_names = list(label_map.keys())
 
     if 'cnn' in results_path:
@@ -51,7 +53,7 @@ def run_model(random_seed, dataset_name, model, results_path):
         X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
         X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
 
-    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed, stratify=y_train)
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed)
 
     dataloaders, dataset_sizes = get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed)
 
@@ -96,13 +98,11 @@ def model_picker(model_name, device):
 
     return model
 
-def average(lst):
-    return sum(lst) / len(lst)
-
-def eval_runs(model_names, dataset_names, random_seeds):
-    final_result = {}
-    for dataset_name in dataset_names:
-        for model_name in model_names:
+def show_metrics(model_names, dataset_names, random_seeds):
+    final_results = []
+    for model_name in model_names:
+        for dataset_name in dataset_names:
+            subject_idc = json.load(open(os.path.join('./dataset/train', dataset_name + '.json'), 'r'))
             accs = []
             precs_macro = []
             precs_weighted = []
@@ -122,15 +122,38 @@ def eval_runs(model_names, dataset_names, random_seeds):
                 recalls_weighted.append(results['cr']['weighted avg']['recall'])
                 aurocs.append(results['auroc'])
                 n_trainable_params.append(results['n_params'])
+            result_df = pd.DataFrame({'model_name': [model_name for i in random_seeds], 'dataset_name': [dataset_name for i in random_seeds],'train_idc': [subject_idc['train_idc'] for i in random_seeds], 'test_idc': [subject_idc['test_idc'] for i in random_seeds], 'random_seed': random_seeds, 'accuracy': accs, 'precision_macro': precs_macro, 'precision_weighted': precs_weighted, 'recall_macro': recalls_macro, 'recall_weighted': recalls_weighted, 'AUROC': aurocs, 'n_params': n_trainable_params})
+            final_results.append(result_df)
+    final_results = pd.concat(final_results).reset_index(drop=True)
+    final_results.to_csv('./output/results.csv', index=False)
 
-            result = {'accuracy': [np.mean(accs), np.std(accs)], 'precision_macro': [np.mean(precs_macro), np.std(precs_macro)], 'precision_weighted': [np.mean(precs_weighted), np.std(precs_weighted)], 'recall_macro': [np.mean(recalls_macro), np.std(recalls_macro)], 'recall_weighted': [np.mean(recalls_weighted), np.std(recalls_weighted)], 'auroc': [np.mean(aurocs), np.std(aurocs)], 'n_params': average(n_trainable_params)}
-            final_result[model_name] = result
-    return final_result
+    std_per_dataset = final_results.groupby(['model_name', 'dataset_name']).std().drop(columns=['random_seed'])
+    std_per_dataset = std_per_dataset.rename(columns={'accuracy': 'accuracy_std',
+                        'precision_macro': 'precision_macro_std', 
+                        'precision_weighted': 'precision_weighted_std', 
+                        'recall_macro': 'recall_macro_std', 
+                        'recall_weighted': 'recall_weighted_std'})
+    std_per_dataset = std_per_dataset.drop(columns=['AUROC', 'n_params'])
+    mean_per_dataset = final_results.groupby(['model_name', 'dataset_name']).mean().drop(columns='random_seed')
+    results_per_dataset = pd.concat([mean_per_dataset, std_per_dataset], axis=1)
+    results_per_dataset.to_csv('./output/results_per_dataset.csv')
+
+    std_per_model = final_results.groupby(['model_name']).std().drop(columns=['random_seed'])
+    std_per_model = std_per_model.rename(columns={'accuracy': 'accuracy_std',
+                        'precision_macro': 'precision_macro_std', 
+                        'precision_weighted': 'precision_weighted_std', 
+                        'recall_macro': 'recall_macro_std', 
+                        'recall_weighted': 'recall_weighted_std'})
+    std_per_model = std_per_model.drop(columns=['AUROC', 'n_params'])
+    mean_per_model = final_results.groupby(['model_name']).mean().drop(columns='random_seed')
+    results_per_model = pd.concat([mean_per_model, std_per_model], axis=1)
+    results_per_model.to_csv('./output/results_per_model.csv')
+    print(results_per_model)
 
 if __name__=='__main__':
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
+    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcn_auto_2']
 
-    dataset_names = [f'./dataset/train/cross_subject_data_{i}_5_subjects.pickle' for i in range(2)]
+    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
     print(dataset_names)
 
     random_seeds = PARAMS['RANDOM_SEEDS']
@@ -138,13 +161,13 @@ if __name__=='__main__':
     print(random_seeds)
 
     # For testing
-    model_names = ['imagine_gcn_auto']
-    random_seeds = PARAMS['RANDOM_SEEDS'][:2]
+    # model_names = ['imagine_gcn_auto']
+    # random_seeds = PARAMS['RANDOM_SEEDS'][:2]
 
     for dataset_name in tqdm(dataset_names):
-        for model_name in tqdm(model_names):
-            for random_seed in tqdm(random_seeds):
-                results_path = os.path.join('output', model_name, dataset_name.rstrip('.pickle').lstrip('./dataset/train/'), str(random_seed))
+        for model_name in model_names:
+            for random_seed in random_seeds:
+                results_path = os.path.join('output', model_name, dataset_name, str(random_seed))
                 os.makedirs(results_path, exist_ok=True)
                 with open(os.path.join(results_path, 'params.txt'), 'w') as f:
                     f.write(str(PARAMS))
@@ -152,7 +175,4 @@ if __name__=='__main__':
                 model = model_picker(model_name, device=PARAMS['DEVICE'])
                 run_model(random_seed=random_seed, dataset_name=dataset_name, model=model, results_path=results_path)
 
-    final_results = eval_runs(model_names, dataset_names, random_seeds)
-    for k, v in final_results.items():
-        print(k)
-        print(v)
+    show_metrics(model_names, dataset_names, random_seeds)

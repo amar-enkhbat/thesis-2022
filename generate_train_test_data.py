@@ -4,9 +4,14 @@ import pandas as pd
 from tqdm import tqdm
 import random
 import pickle
+import json
 
 from sklearn.preprocessing import StandardScaler
 SCALER = StandardScaler()
+
+import warnings
+from sklearn.exceptions import UndefinedMetricWarning
+warnings.filterwarnings('ignore', category=UndefinedMetricWarning) 
 
 from params import PARAMS
 random_seed = PARAMS['RANDOM_SEEDS'][0]
@@ -42,39 +47,50 @@ def create_cross_subject_data(train_idc, test_idc):
     return cross_subject_data
 
 def main():
+    n_splits = 10
     exclusions = ["S088", "S089", "S092", "S100"]
     subjects_idc = [f"S{i:03d}" for i in range(1, 110)]
     subjects_idc = [i for i in subjects_idc if i not in exclusions]
+    print('Total number of available subjets:', len(subjects_idc))
 
     if not os.path.isdir("./dataset/train"):
         os.mkdir("./dataset/train")
 
-    for i in tqdm(range(10)):
+    for i in tqdm(range(n_splits)):
         test_idc = random.sample(subjects_idc, 10)
         train_idc = [i for i in subjects_idc if i not in test_idc]
+        idc_dict = {'train_idc': train_idc, 'test_idc': test_idc}
+        json.dump(idc_dict, open(f"./dataset/train/cross_subject_data_{i}.json", "w"))
 
-        with open(f"./dataset/train/cross_subject_data_{i}.txt", "w") as text_file:
-            idc_dict = {'train_idc': train_idc, 'test_idc': test_idc}
-            text_file.write(f"{str(idc_dict)}")
-
-        cross_subject_data = create_cross_subject_data(train_idc, test_idc)
-        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}.pickle", "wb"))
+        # cross_subject_data = create_cross_subject_data(train_idc, test_idc)
+        # pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}.pickle", "wb"))
 
     # Example dataset with 5 subjects.
     
-
-    for i in tqdm(range(10)):
-        train_idc = random.sample(subjects_idc, 5)
-        test_idc = [i for i in subjects_idc if i not in train_idc]
-        test_idc = list(np.random.choice(test_idc, 1))
- 
-        with open(f"./dataset/train/cross_subject_data_{i}_5_subjects.txt", "w") as text_file:
-            idc_dict = {'train_idc': train_idc, 'test_idc': test_idc}
-            text_file.write(f"{str(idc_dict)}")
-
+    subjects_idc = [f"S{i:03d}" for i in range(1, 110)]
+    subjects_idc = [i for i in subjects_idc if i not in exclusions]
+    n_train_subjects = 5
+    n_test_subjects = 1
+    n_splits = 10
+    asdf = []
+    asdfasdf = []
+    for i in tqdm(range(n_splits)):
+        train_idc = []
+        test_idc = []
+        for _ in range(n_train_subjects):
+            random_val = random.sample(subjects_idc, 1)[0]
+            subjects_idc.remove(random_val)
+            train_idc.append(random_val)
+        for _ in range(n_test_subjects):
+            random_val = random.sample(subjects_idc, 1)[0]
+            subjects_idc.remove(random_val)
+            test_idc.append(random_val)
+        asdf += test_idc
+        asdfasdf += train_idc
+        idc_dict = {'train_idc': train_idc, 'test_idc': test_idc}
+        json.dump(idc_dict, open(f"./dataset/train/cross_subject_data_{i}_5_subjects.json", "w"))
         cross_subject_data = create_cross_subject_data(train_idc, test_idc)
         pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}_5_subjects.pickle", "wb"))
-
 
 if __name__ == "__main__":
     main()
