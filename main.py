@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import os
 import random
 import torch
@@ -58,9 +61,6 @@ def prepare_datasets(random_seed, dataset_name):
 
     X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed)
     X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['VALID_SIZE'], shuffle=True, random_state=random_seed)
-    print('Train data size:', X_train.shape)
-    print('Valid data size:', X_valid.shape)
-    print('Test data size:', X_test.shape)
     
     dataloaders, dataset_sizes = get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed)
 
@@ -166,13 +166,12 @@ def show_metrics(model_names, dataset_names, random_seeds):
 if __name__=='__main__':
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
 
-    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
     print(dataset_names)
 
-    random_seeds = PARAMS['RANDOM_SEEDS']
+    random_seeds = PARAMS['RANDOM_SEEDS'][:1]
     print('Random Seeds:')
     print(random_seeds)
-
     
     # For testing
     # model_names = ['imagine_gcn_auto']
