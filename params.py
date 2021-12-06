@@ -24,5 +24,5 @@ PARAMS = {
     'RNN_HIDDEN_SIZE': 156,
     'RNN_N_LAYERS': 2,
     'TEST_SIZE': 1/6,
-    'TEST_VALID': 1/5
+    'VALID_SIZE': 1/5
 }
