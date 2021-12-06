@@ -62,8 +62,8 @@ def main():
         idc_dict = {'train_idc': train_idc, 'test_idc': test_idc}
         json.dump(idc_dict, open(f"./dataset/train/cross_subject_data_{i}.json", "w"))
 
-        # cross_subject_data = create_cross_subject_data(train_idc, test_idc)
-        # pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}.pickle", "wb"))
+        cross_subject_data = create_cross_subject_data(train_idc, test_idc)
+        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}.pickle", "wb"))
 
     # Example dataset with 5 subjects.
     
