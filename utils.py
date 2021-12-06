@@ -12,8 +12,8 @@ def load_data(dataset_path):
     dataset = pickle.load(open(dataset_path, 'rb'))
     y_train = dataset['y_train']
     X_train = dataset['X_train'].astype(np.float32)
-    y_test = dataset['y_train']
-    X_test = dataset['X_train'].astype(np.float32)
+    y_test = dataset['y_test']
+    X_test = dataset['X_test'].astype(np.float32)
 
     label_map = {'imagine_both_feet': 0, 'imagine_both_fist': 1, 'imagine_left_fist': 2, 'imagine_right_fist': 3}
     y_train = np.vectorize(label_map.__getitem__)(y_train)
