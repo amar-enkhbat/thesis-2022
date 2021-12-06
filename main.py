@@ -31,7 +31,7 @@ def model_predict(model, test_loader):
 
     return y_preds, y_true
 
-def run_model(random_seed, dataset_name, model, results_path):    
+def prepare_datasets(random_seed, dataset_name):
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
@@ -40,23 +40,38 @@ def run_model(random_seed, dataset_name, model, results_path):
     X_train, y_train, X_test, y_test, label_map = load_data(dataset_path)
     class_names = list(label_map.keys())
 
+    X_train = np.vstack([X_train, X_test])
+    y_train = np.hstack([y_train, y_test])
+
     if 'cnn' in results_path:
         X_train, y_train = prepare_data_cnn(X_train, y_train, PARAMS['SEQ_LEN'])
-        X_test, y_test = prepare_data_cnn(X_test, y_test, PARAMS['SEQ_LEN'])
+        # X_test, y_test = prepare_data_cnn(X_test, y_test, PARAMS['SEQ_LEN'])
     elif 'rnn' in results_path:
         X_train, y_train = prepare_data_rnn(X_train, y_train, PARAMS['SEQ_LEN'])
-        X_test, y_test = prepare_data_rnn(X_test, y_test, PARAMS['SEQ_LEN'])
+        # X_test, y_test = prepare_data_rnn(X_test, y_test, PARAMS['SEQ_LEN'])
     elif 'gcn' in results_path:
         X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
-        X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
+        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
     elif 'fcn' in results_path:
         X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
-        X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
+        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
 
-    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed)
-
+    X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed)
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['VALID_SIZE'], shuffle=True, random_state=random_seed)
+    print('Train data size:', X_train.shape)
+    print('Valid data size:', X_valid.shape)
+    print('Test data size:', X_test.shape)
+    
     dataloaders, dataset_sizes = get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed)
 
+    return dataloaders, dataset_sizes, class_names
+
+def run_model(random_seed, dataloaders, dataset_sizes, class_names, model, results_path):    
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
 
@@ -158,6 +173,7 @@ if __name__=='__main__':
     print('Random Seeds:')
     print(random_seeds)
 
+    
     # For testing
     # model_names = ['imagine_gcn_auto']
     # random_seeds = PARAMS['RANDOM_SEEDS'][:2]
@@ -169,8 +185,11 @@ if __name__=='__main__':
                 os.makedirs(results_path, exist_ok=True)
                 with open(os.path.join(results_path, 'params.txt'), 'w') as f:
                     f.write(str(PARAMS))
+
+                dataloaders, dataset_sizes, class_names = prepare_datasets(random_seed, dataset_name)
+
                 
                 model = model_picker(model_name, device=PARAMS['DEVICE'])
-                run_model(random_seed=random_seed, dataset_name=dataset_name, model=model, results_path=results_path)
+                run_model((random_seed, dataloaders, dataset_sizes, class_names, model, results_path))
 
     show_metrics(model_names, dataset_names, random_seeds)
