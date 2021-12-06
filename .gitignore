@@ -5,4 +5,8 @@ dataset/
 *.pyc
 __pycache__/
 __init__.py
-# output/
+output/
+train_comparison.ipynb
+test.ipynb
+eval.ipynb
+

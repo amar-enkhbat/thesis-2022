@@ -23,5 +23,6 @@ PARAMS = {
     'CNN_KERNEL_SIZE': [64, 64],
     'RNN_HIDDEN_SIZE': 156,
     'RNN_N_LAYERS': 2,
-    'TEST_SIZE': 0.2
+    'TEST_SIZE': 1/6,
+    'TEST_VALID': 1/5
 }
