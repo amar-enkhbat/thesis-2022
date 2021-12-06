@@ -190,6 +190,6 @@ if __name__=='__main__':
 
                 
                 model = model_picker(model_name, device=PARAMS['DEVICE'])
-                run_model((random_seed, dataloaders, dataset_sizes, class_names, model, results_path))
+                run_model(random_seed, dataloaders, dataset_sizes, class_names, model, results_path)
 
     show_metrics(model_names, dataset_names, random_seeds)
