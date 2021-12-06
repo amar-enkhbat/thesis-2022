@@ -117,7 +117,7 @@ class GCNAuto(nn.Module):
         # A = F.softmax(F.relu(torch.mm(self.node_embeddings, self.node_embeddings.transpose(0, 1))), dim=1)
         A = torch.mm(self.node_embeddings, self.node_embeddings.T)
         # A = F.dropout(A, 0.5)
-        # A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
+        A = A + torch.eye(A.shape[0]).to(PARAMS['DEVICE'])
 
         # x dim: [N, n_nodes, node_feat]
         # x_dim: [32, 64, 100]
