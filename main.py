@@ -3,6 +3,7 @@ warnings.filterwarnings("ignore")
 
 import os
 import random
+from datetime import datetime
 import torch
 import numpy as np 
 import pandas as pd
@@ -34,7 +35,7 @@ def model_predict(model, test_loader):
 
     return y_preds, y_true
 
-def prepare_datasets(random_seed, dataset_name):
+def prepare_datasets(random_seed, dataset_name, results_path):
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
@@ -74,8 +75,9 @@ def run_model(random_seed, dataloaders, dataset_sizes, class_names, model, resul
     
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
 
-    best_model, history = train_model(dataloaders, dataset_sizes, model, criterion, optimizer, PARAMS['N_EPOCHS'], random_seed=random_seed)
+    best_model, history = train_model(dataloaders, dataset_sizes, model, criterion, optimizer, scheduler, PARAMS['N_EPOCHS'], random_seed=random_seed)
 
     y_preds, y_test = model_predict(best_model, test_loader=dataloaders['test'])
 
@@ -95,7 +97,7 @@ def run_model(random_seed, dataloaders, dataset_sizes, class_names, model, resul
         pickle.dump(results, f)
 
 
-def model_picker(model_name, device):
+def model_picker(model_name, random_seed, device):
     if model_name == 'imagine_fcn':
         model = FCN(in_features=PARAMS['SEQ_LEN'], num_classes=PARAMS['N_CLASSES'], n_nodes=PARAMS['N_CHANNELS'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_cnn':
@@ -111,7 +113,7 @@ def model_picker(model_name, device):
 
     return model
 
-def show_metrics(model_names, dataset_names, random_seeds):
+def show_metrics(time_now, model_names, dataset_names, random_seeds):
     final_results = []
     for model_name in model_names:
         for dataset_name in dataset_names:
@@ -125,7 +127,7 @@ def show_metrics(model_names, dataset_names, random_seeds):
             n_trainable_params = []
 
             for random_seed in random_seeds:
-                path = os.path.join('output', model_name, dataset_name.rstrip('.pickle').lstrip('./dataset/train/'), str(random_seed), 'results.pickle')
+                path = os.path.join('output', time_now, model_name, dataset_name.rstrip('.pickle').lstrip('./dataset/train/'), str(random_seed), 'results.pickle')
                 results = pickle.load(open(path, 'rb'))
 
                 accs.append(results['cr']['accuracy'])
@@ -138,7 +140,7 @@ def show_metrics(model_names, dataset_names, random_seeds):
             result_df = pd.DataFrame({'model_name': [model_name for i in random_seeds], 'dataset_name': [dataset_name for i in random_seeds],'train_idc': [subject_idc['train_idc'] for i in random_seeds], 'test_idc': [subject_idc['test_idc'] for i in random_seeds], 'random_seed': random_seeds, 'accuracy': accs, 'precision_macro': precs_macro, 'precision_weighted': precs_weighted, 'recall_macro': recalls_macro, 'recall_weighted': recalls_weighted, 'AUROC': aurocs, 'n_params': n_trainable_params})
             final_results.append(result_df)
     final_results = pd.concat(final_results).reset_index(drop=True)
-    final_results.to_csv('./output/results.csv', index=False)
+    final_results.to_csv(os.path.join('./output', time_now, 'results.csv'), index=False)
 
     std_per_dataset = final_results.groupby(['model_name', 'dataset_name']).std().drop(columns=['random_seed'])
     std_per_dataset = std_per_dataset.rename(columns={'accuracy': 'accuracy_std',
@@ -149,7 +151,7 @@ def show_metrics(model_names, dataset_names, random_seeds):
     std_per_dataset = std_per_dataset.drop(columns=['AUROC', 'n_params'])
     mean_per_dataset = final_results.groupby(['model_name', 'dataset_name']).mean().drop(columns='random_seed')
     results_per_dataset = pd.concat([mean_per_dataset, std_per_dataset], axis=1)
-    results_per_dataset.to_csv('./output/results_per_dataset.csv')
+    results_per_dataset.to_csv(os.path.join('./output', time_now, 'results_per_dataset.csv'))
 
     std_per_model = final_results.groupby(['model_name']).std().drop(columns=['random_seed'])
     std_per_model = std_per_model.rename(columns={'accuracy': 'accuracy_std',
@@ -160,35 +162,57 @@ def show_metrics(model_names, dataset_names, random_seeds):
     std_per_model = std_per_model.drop(columns=['AUROC', 'n_params'])
     mean_per_model = final_results.groupby(['model_name']).mean().drop(columns='random_seed')
     results_per_model = pd.concat([mean_per_model, std_per_model], axis=1)
-    results_per_model.to_csv('./output/results_per_model.csv')
+    results_per_model.to_csv(os.path.join('./output', time_now, 'results_per_model.csv'))
     print(results_per_model)
+    return final_results
 
-if __name__=='__main__':
+
+def main():
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
 
-    dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
-    print(dataset_names)
+    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
 
-    random_seeds = PARAMS['RANDOM_SEEDS'][:1]
-    print('Random Seeds:')
-    print(random_seeds)
+    random_seeds = PARAMS['RANDOM_SEEDS']
     
-    # For testing
-    # model_names = ['imagine_gcn_auto']
-    # random_seeds = PARAMS['RANDOM_SEEDS'][:2]
+    ### For testing ###
+    # model_names = ['imagine_rnn']
+    # random_seeds = random_seeds[:1]
+    # dataset_names = dataset_names[:1]
+    ###################
 
-    for dataset_name in tqdm(dataset_names):
-        for model_name in model_names:
+    print('#' * 50)
+    print('Model names:', model_names)
+    print('Number of models:', len(model_names))
+    print('Dataset names:', dataset_names)
+    print('Number of datasets:', len(dataset_names))
+    print('Random seeds:', random_seeds)
+    print('Number of random seeds:', len(random_seeds))
+    print('#' * 50)
+    print('PARAMS:')
+    print(PARAMS)
+    print('')
+    
+    input_key = input('Execute Y/N?  ')
+
+    if input_key == 'N' or input_key == 'n':
+        exit(1)
+
+    time_now = datetime.now().strftime('%Y-%m-%d-%H-%M')
+    for model_name in tqdm(model_names):
+        for dataset_name in dataset_names:
             for random_seed in random_seeds:
-                results_path = os.path.join('output', model_name, dataset_name, str(random_seed))
+                results_path = os.path.join('output', time_now, model_name, dataset_name, str(random_seed))
                 os.makedirs(results_path, exist_ok=True)
                 with open(os.path.join(results_path, 'params.txt'), 'w') as f:
                     f.write(str(PARAMS))
 
-                dataloaders, dataset_sizes, class_names = prepare_datasets(random_seed, dataset_name)
+                dataloaders, dataset_sizes, class_names = prepare_datasets(random_seed, dataset_name, results_path)
 
                 
-                model = model_picker(model_name, device=PARAMS['DEVICE'])
+                model = model_picker(model_name, random_seed, device=PARAMS['DEVICE'])
                 run_model(random_seed, dataloaders, dataset_sizes, class_names, model, results_path)
 
-    show_metrics(model_names, dataset_names, random_seeds)
+    final_results = show_metrics(time_now, model_names, dataset_names, random_seeds)
+
+if __name__=='__main__':
+    main()

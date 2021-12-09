@@ -90,10 +90,15 @@ def print_classification_report(y_true, y_preds, num_classes, class_names):
 def plot_history(history, save_path):
     df = pd.DataFrame(history)
     df["Epochs"] = range(len(df))
+    
     fig = px.line(df, x='Epochs', y=['train_loss', 'val_loss'], labels={'value': 'Loss'})
     fig.write_html(os.path.join(save_path, 'history_loss.html'))
+
     fig = px.line(df, x='Epochs', y=['train_acc', 'val_acc'], labels={'value': 'Loss'})
     fig.write_html(os.path.join(save_path, 'history_acc.html'))
+
+    fig = px.line(df, x='Epochs', y=['lrs'])
+    fig.write_html(os.path.join(save_path, 'history_lrs.html'))
 
 def plot_cm(cm, class_names, save_path):
     plt.figure(figsize=(7, 5))
