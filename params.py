@@ -14,8 +14,9 @@ PARAMS = {
     'N_RUNS': N_RUNS,
     'RANDOM_SEEDS': RANDOM_SEEDS,
     'N_EPOCHS': 100,
+    'LR': 0.001,
     'BATCH_SIZE': 32,
-    'SEQ_LEN': 400,
+    'SEQ_LEN': 100,
     'FCN_HIDDEN_SIZES': [256, 512, 256],
     'CNN_HIDDEN_SIZES': [16, 512],
     'CNN_N_KERNELS': 16,
@@ -23,6 +24,7 @@ PARAMS = {
     'CNN_KERNEL_SIZE': [64, 64],
     'RNN_HIDDEN_SIZE': 156,
     'RNN_N_LAYERS': 2,
+    'DROPOUT_P': 0.0,
     'TEST_SIZE': 1/6,
     'VALID_SIZE': 1/5
 }

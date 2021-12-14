@@ -208,13 +208,16 @@ Y = tf.placeholder(tf.float32, shape=[None, num_labels], name='Y')
 train_phase = tf.placeholder(tf.bool, name='train_phase')
 keep_prob = tf.placeholder(tf.float32, name='keep_prob')
 
+print('X size:', X)
+print('Y size:', Y)
 # first CNN layer
 conv_1 = cnn_2d.apply_conv2d(X, kernel_height_1st, kernel_width_1st, input_channel_num, conv_channel_num, kernel_stride, train_phase)
+print('Conv_1 size:', conv_1)
 pool_1 = cnn_2d.apply_max_pooling(conv_1, pooling_height_1st, pooling_width_1st, pooling_stride_1st)
-
+print('Pool_1 size:', pool_1)
 pool1_shape = pool_1.get_shape().as_list()
 pool1_flat = tf.reshape(pool_1, [-1, pool1_shape[1]*pool1_shape[2]*pool1_shape[3]])
-
+print('Pool1_flat shape:', pool1_flat)
 fc_drop = tf.nn.dropout(pool1_flat, keep_prob)	
 
 if (n_fc_in == 'None'):
@@ -222,29 +225,30 @@ if (n_fc_in == 'None'):
 	lstm_in = tf.reshape(fc_drop, [-1, num_timestep, pool1_shape[1]*pool1_shape[2]*pool1_shape[3]])
 else:
 	lstm_in = tf.reshape(fc_drop, [-1, num_timestep, n_fc_in])
-
+print('lstm_in shape:', lstm_in)
 ########################## RNN ########################
 output = lstm_in
 for layer in range(2):
-    with tf.variable_scope('rnn_{}'.format(layer),reuse=False):
-        cell_fw = tf.contrib.rnn.LSTMCell(n_hidden_state)
-        cell_fw = tf.contrib.rnn.DropoutWrapper(cell_fw, input_keep_prob = keep_prob)
+	with tf.variable_scope('rnn_{}'.format(layer),reuse=False):
+		cell_fw = tf.contrib.rnn.LSTMCell(n_hidden_state)
+		cell_fw = tf.contrib.rnn.DropoutWrapper(cell_fw, input_keep_prob = keep_prob)
 
-        cell_bw = tf.contrib.rnn.LSTMCell(n_hidden_state)
-        cell_bw = tf.contrib.rnn.DropoutWrapper(cell_bw, input_keep_prob = keep_prob)
+		cell_bw = tf.contrib.rnn.LSTMCell(n_hidden_state)
+		cell_bw = tf.contrib.rnn.DropoutWrapper(cell_bw, input_keep_prob = keep_prob)
 
-        outputs, states = tf.nn.bidirectional_dynamic_rnn(cell_fw, 
-                                                          cell_bw, 
-                                                          output,
-                                                          dtype=tf.float32)
-        output = tf.concat(outputs,2)
-        state = tf.concat(states,2)
+		outputs, states = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, output, dtype=tf.float32)
+		print('Outputs shape:', outputs)
+		output = tf.concat(outputs,2)
+		print('Output shape:', output)
+		state = tf.concat(states,2)
 
 rnn_op = output
-
+print('rnn_op shape:', rnn_op)
 ########################## attention ########################
 with tf.name_scope('Attention_layer'):
     attention_op, alphas = attention(rnn_op, attention_size, time_major = False, return_alphas=True)
+print('Attention shape', attention_op)
+# exit(1)
 
 attention_drop = tf.nn.dropout(attention_op, keep_prob)	
 y_ = cnn_2d.apply_readout(attention_drop, rnn_op.shape[2].value, num_labels)

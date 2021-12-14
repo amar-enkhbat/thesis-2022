@@ -9,13 +9,14 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj, plot_adj_sym
-from models import FCN, CNN, RNN, GCN, GCNAuto
+from models import FCN, CNN, RNN, GCN, GCNAuto, GCRAMAuto, GATAuto
 from params import PARAMS
 from train import get_dataloaders, train_model, init_model_params
 
 import pickle
 import json
 from tqdm import tqdm
+from torchinfo import summary
 
 def model_predict(model, test_loader):
     model.eval()
@@ -59,6 +60,12 @@ def prepare_datasets(random_seed, dataset_name, results_path):
     elif 'fcn' in results_path:
         X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
         # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
+    elif 'gcram' in results_path:
+        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
+        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
+    elif 'gat' in results_path:
+        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
+        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
 
     X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed)
     X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['VALID_SIZE'], shuffle=True, random_state=random_seed)
@@ -74,8 +81,9 @@ def run_model(random_seed, dataloaders, dataset_sizes, class_names, model, resul
     torch.cuda.manual_seed(random_seed)
     
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS['LR'])
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=1)
 
     best_model, history = train_model(dataloaders, dataset_sizes, model, criterion, optimizer, scheduler, PARAMS['N_EPOCHS'], random_seed=random_seed)
 
@@ -87,6 +95,7 @@ def run_model(random_seed, dataloaders, dataset_sizes, class_names, model, resul
     plot_cm(cm, class_names, results_path)
     if 'gcn' in results_path:
         plot_adj(model.node_embeddings.cpu().detach().numpy(), results_path)
+        pickle.dump(model.node_embeddings.cpu().detach().numpy(), open('./output/node_embedding.pickle', 'wb'))
         A = torch.mm(model.node_embeddings, model.node_embeddings.T)
         plot_adj_sym(A.cpu().detach().numpy(), results_path)
     
@@ -108,6 +117,11 @@ def model_picker(model_name, random_seed, device):
         model = GCN(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_gcn_auto':
         model = GCNAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+    elif model_name == 'imagine_gcram_auto':
+        model = GCRAMAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+    elif model_name == 'imagine_gat_auto':
+        model = GATAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+
     model = model.to(device)
     model = init_model_params(model, random_seed=random_seed)
 
@@ -168,16 +182,18 @@ def show_metrics(time_now, model_names, dataset_names, random_seeds):
 
 
 def main():
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto']
+    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto']
 
     dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
 
     random_seeds = PARAMS['RANDOM_SEEDS']
     
     ### For testing ###
-    # model_names = ['imagine_rnn']
-    # random_seeds = random_seeds[:1]
-    # dataset_names = dataset_names[:1]
+    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    model_names = ['imagine_gcn_auto']
+    # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto']
+    random_seeds = random_seeds[:1]
+    dataset_names = dataset_names[:1]
     ###################
 
     print('#' * 50)
@@ -203,13 +219,14 @@ def main():
             for random_seed in random_seeds:
                 results_path = os.path.join('output', time_now, model_name, dataset_name, str(random_seed))
                 os.makedirs(results_path, exist_ok=True)
-                with open(os.path.join(results_path, 'params.txt'), 'w') as f:
+                with open(os.path.join('output', time_now, 'params.txt'), 'w') as f:
                     f.write(str(PARAMS))
 
                 dataloaders, dataset_sizes, class_names = prepare_datasets(random_seed, dataset_name, results_path)
 
                 
                 model = model_picker(model_name, random_seed, device=PARAMS['DEVICE'])
+                # summary(model, input_size=(32, 64, 100))
                 run_model(random_seed, dataloaders, dataset_sizes, class_names, model, results_path)
 
     final_results = show_metrics(time_now, model_names, dataset_names, random_seeds)

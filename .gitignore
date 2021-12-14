@@ -7,7 +7,5 @@ dataset/
 __pycache__/
 __init__.py
 output/
-train_comparison.ipynb
-test.ipynb
-eval.ipynb
+*.ipynb
 
