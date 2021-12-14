@@ -16,7 +16,6 @@ from train import get_dataloaders, train_model, init_model_params
 import pickle
 import json
 from tqdm import tqdm
-from torchinfo import summary
 
 def model_predict(model, test_loader):
     model.eval()
