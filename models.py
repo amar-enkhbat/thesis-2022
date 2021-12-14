@@ -240,9 +240,9 @@ class GCRAMAuto(nn.Module):
 #         return out
 
 class GCRAM(nn.Module):
-    def __init__(self, in_features, n_nodes, num_classes, hidden_sizes):
+    def __init__(self, in_channels, n_kernels, kernel_size, seq_len, hidden_size, n_classes):
         super(GCRAM, self).__init__()
-        self.conv1 = nn.Conv2d(1, 40, kernel_size=[64, 64])
+        self.conv1 = nn.Conv2d(in_channels, n_kernels, kernel_size=kernel_size)
         self.maxpool1 = nn.MaxPool2d(kernel_size=(1, 75), stride=10)
 
         self.lstm1 = nn.LSTM(input_size=1520, hidden_size=64, batch_first=True, bidirectional=True, num_layers=2)

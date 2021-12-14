@@ -107,7 +107,7 @@ def n_graph():
     for i, j in edges:
         A[i, j] = 1
         A[j, i] = 1
-
+    A = A + np.eye(A.shape[0])
     adj = normalize_adj(A)
     return adj
 

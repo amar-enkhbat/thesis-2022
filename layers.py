@@ -162,7 +162,7 @@ class BatchGraphAttentionLayer(nn.Module):
         zero_vec = -9e15*torch.ones_like(e)
         # print('zero vec shape:', zero_vec.shape)
         
-        adj_batch = torch.concat([adj for i in range(32)], axis=0).view(32, 64, 64)
+        adj_batch = torch.cat([adj for i in range(32)], axis=0).view(32, 64, 64)
         # print('adj_batch shape:', adj_batch.shape)
         attention = torch.where(adj_batch > 0, e, zero_vec)
         attention = F.softmax(attention, dim=1)
