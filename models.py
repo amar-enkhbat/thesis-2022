@@ -14,14 +14,17 @@ class FCN(nn.Module):
         self.fc1 = nn.Linear(in_features, hidden_sizes[0])
         self.fc2 = nn.Linear(hidden_sizes[0], hidden_sizes[1])
         self.fc3 = nn.Linear(hidden_sizes[1], hidden_sizes[2])
-        self.fc4 = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
-        self.flatten = nn.Flatten()
 
+        self.flatten = nn.Flatten()
+        self.fc4 = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
+        
     def forward(self, x):
         out = F.relu(self.fc1(x))
         out = F.dropout(out, p=PARAMS['DROPOUT_P'])
+
         out = F.relu(self.fc2(out))
         out = F.dropout(out, p=PARAMS['DROPOUT_P'])
+
         out = F.relu(self.fc3(out))
         out = F.dropout(out, p=PARAMS['DROPOUT_P'])
 
@@ -80,13 +83,17 @@ class GCN(nn.Module):
         self.flatten = nn.Flatten()
         self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
 
-        self.node_embeddings = torch.from_numpy(compute_adj_matrices(graph_type) + np.eye(64, dtype=np.float32)).to(PARAMS['DEVICE'])
+        self.identity = torch.eye(n_nodes).to(PARAMS['DEVICE'])
+        self.node_embeddings = torch.from_numpy(compute_adj_matrices(graph_type)).to(PARAMS['DEVICE'])
     def forward(self, x):
-        out = F.relu(self.gc1(x, self.node_embeddings))
+        A = self.node_embeddings + self.identity
+        out = F.relu(self.gc1(x, A))
         out = F.dropout(out, p=PARAMS['DROPOUT_P'])
-        out = F.relu(self.gc2(out, self.node_embeddings))
+
+        out = F.relu(self.gc2(out, A))
         out = F.dropout(out, p=PARAMS['DROPOUT_P'])
-        out = F.relu(self.gc3(out, self.node_embeddings))
+        
+        out = F.relu(self.gc3(out, A))
         out = F.dropout(out, p=PARAMS['DROPOUT_P'])
 
         out = self.flatten(out)

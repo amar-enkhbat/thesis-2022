@@ -82,8 +82,7 @@ def run_model(random_seed, dataloaders, dataset_sizes, class_names, model, resul
     
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS['LR'])
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, PARAMS['SCHEDULER_STEPSIZE'], PARAMS['SCHEDULER_GAMMA'])
 
     best_model, history = train_model(dataloaders, dataset_sizes, model, criterion, optimizer, scheduler, PARAMS['N_EPOCHS'], random_seed=random_seed)
 
@@ -114,9 +113,9 @@ def model_picker(model_name, random_seed, device):
     elif model_name == 'imagine_rnn':
         model = RNN(PARAMS['SEQ_LEN'], PARAMS['RNN_N_LAYERS'], PARAMS['RNN_HIDDEN_SIZE'], PARAMS['N_CLASSES'])
     elif model_name == 'imagine_gcn':
-        model = GCN(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+        model = GCN(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['GCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_gcn_auto':
-        model = GCNAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+        model = GCNAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['GCNAUTO_HIDDEN_SIZES'])
     elif model_name == 'imagine_gcram_auto':
         model = GCRAMAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_gat_auto':
@@ -189,11 +188,11 @@ def main():
     random_seeds = PARAMS['RANDOM_SEEDS']
     
     ### For testing ###
-    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
-    model_names = ['imagine_gcn_auto']
-    # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto']
-    random_seeds = random_seeds[:1]
-    dataset_names = dataset_names[:1]
+    # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    # model_names = ['imagine_rnn']
+    # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto']
+    # random_seeds = random_seeds[:1]
+    # dataset_names = dataset_names[:1]
     ###################
 
     print('#' * 50)
