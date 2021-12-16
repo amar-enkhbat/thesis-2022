@@ -136,56 +136,56 @@ class GCNAuto(nn.Module):
 
         return out
 
-class GCRAMAuto(nn.Module):
-    def __init__(self, in_features, n_nodes, num_classes, hidden_sizes):
-        super(GCRAMAuto, self).__init__()
-        self.gc1 = BatchGraphConvolutionLayer(in_features, hidden_sizes[0], n_nodes)
-        self.gc2 = BatchGraphConvolutionLayer(hidden_sizes[0], hidden_sizes[1], n_nodes)
-        self.gc3 = BatchGraphConvolutionLayer(hidden_sizes[1], hidden_sizes[2], n_nodes)
+# class GCRAMAuto(nn.Module):
+#     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes):
+#         super(GCRAMAuto, self).__init__()
+#         self.gc1 = BatchGraphConvolutionLayer(in_features, hidden_sizes[0], n_nodes)
+#         self.gc2 = BatchGraphConvolutionLayer(hidden_sizes[0], hidden_sizes[1], n_nodes)
+#         self.gc3 = BatchGraphConvolutionLayer(hidden_sizes[1], hidden_sizes[2], n_nodes)
 
-        self.conv1 = nn.Conv2d(1, 40, kernel_size=[64, 64])
-        self.maxpool1 = nn.MaxPool2d(kernel_size=(1, 75), stride=10)
+#         self.conv1 = nn.Conv2d(1, 40, kernel_size=[64, 64])
+#         self.maxpool1 = nn.MaxPool2d(kernel_size=(1, 75), stride=10)
 
-        self.lstm1 = nn.LSTM(input_size=1520, hidden_size=64, batch_first=True, bidirectional=True, num_layers=2, dropout=PARAMS['DROPOUT_P'])
+#         self.lstm1 = nn.LSTM(input_size=1520, hidden_size=64, batch_first=True, bidirectional=True, num_layers=2, dropout=PARAMS['DROPOUT_P'])
 
-        self.attention = nn.MultiheadAttention(embed_dim=128, num_heads=2, batch_first=True)
+#         self.attention = nn.MultiheadAttention(embed_dim=128, num_heads=2, batch_first=True)
 
-        self.flatten = nn.Flatten()
-        self.linear = nn.Linear(128, num_classes)
+#         self.flatten = nn.Flatten()
+#         self.linear = nn.Linear(128, num_classes)
 
-        self.identity = torch.eye(n_nodes).to(PARAMS['DEVICE'])
-        self.node_embeddings = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
-    def forward(self, x):
-        A = torch.mm(self.node_embeddings, self.node_embeddings.T)
-        A = A + self.identity
+#         self.identity = torch.eye(n_nodes).to(PARAMS['DEVICE'])
+#         self.node_embeddings = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
+#     def forward(self, x):
+#         A = torch.mm(self.node_embeddings, self.node_embeddings.T)
+#         A = A + self.identity
 
-        out = F.relu(self.gc1(x, A))
-        # out = self.dropout(out)
-        # [N, n_nodes, out_features]
-        out = F.relu(self.gc2(out, A))
-        # out = self.dropout(out)
+#         out = F.relu(self.gc1(x, A))
+#         # out = self.dropout(out)
+#         # [N, n_nodes, out_features]
+#         out = F.relu(self.gc2(out, A))
+#         # out = self.dropout(out)
         
-        out = out.unsqueeze(1)
+#         out = out.unsqueeze(1)
 
-        out = F.relu(self.conv1(out))
+#         out = F.relu(self.conv1(out))
 
-        out = self.maxpool1(out)
+#         out = self.maxpool1(out)
 
-        out = self.flatten(out)
+#         out = self.flatten(out)
 
-        out = out.view(out.shape[0], 1, -1)
+#         out = out.view(out.shape[0], 1, -1)
 
-        out, (h_T, c_T) = self.lstm1(out)
-        out = out[:, -1, :]
+#         out, (h_T, c_T) = self.lstm1(out)
+#         out = out[:, -1, :]
 
-        # out = out.unsqueeze(1)
+#         # out = out.unsqueeze(1)
 
-        # out, attn_weights = self.attention(query=out, key=out, value=out)
+#         # out, attn_weights = self.attention(query=out, key=out, value=out)
 
-        out = self.flatten(out)
-        out = self.linear(out)
+#         out = self.flatten(out)
+#         out = self.linear(out)
 
-        return out
+#         return out
 
 
 # class GCRAMAuto(nn.Module):
@@ -285,6 +285,59 @@ class GCRAM(nn.Module):
         out = self.linear(out)
 
         return out
+
+class GCRAMAuto(nn.Module):
+    def __init__(self, seq_len, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes):
+        super(GCRAMAuto, self).__init__()
+        self.conv1 = nn.Conv2d(cnn_in_channels, cnn_n_kernels, kernel_size=cnn_kernel_size, stride=cnn_stride)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=maxpool_kernel_size, stride=maxpool_stride)
+
+        cnn_output_size = (seq_len - cnn_kernel_size[1])//cnn_stride + 1
+        maxpool_output_size = (cnn_output_size-maxpool_kernel_size[1])//maxpool_stride+1
+        lstm_input_size = maxpool_output_size * cnn_in_channels * cnn_n_kernels
+        self.lstm1 = nn.LSTM(input_size=lstm_input_size, hidden_size=lstm_hidden_size, batch_first=True, bidirectional=is_bidirectional, num_layers=lstm_n_layers)
+
+        if is_bidirectional:
+            self.attention = SelfAttentionLayer(hidden_size=lstm_hidden_size*2, attention_size=attn_embed_dim, return_alphas=True)
+        else:
+            self.attention = SelfAttentionLayer(hidden_size=lstm_hidden_size, attention_size=attn_embed_dim, return_alphas=True)
+        
+        self.flatten = nn.Flatten()
+
+        if is_bidirectional:
+            self.linear = nn.Linear(lstm_hidden_size*2, n_classes)
+        else:
+            self.linear = nn.Linear(lstm_hidden_size, n_classes)
+
+        self.identity = torch.eye(64).to(PARAMS['DEVICE'])
+        self.node_embeddings = nn.Parameter(torch.randn(64, 64), requires_grad=True)
+        
+    def forward(self, x):
+        A = torch.mm(self.node_embeddings, self.node_embeddings.T)
+        A = A + self.identity
+
+        out = torch.einsum("ij,kjl->kil", A, x)
+
+        out = out.unsqueeze(1)
+
+        out = F.relu(self.conv1(out))
+        out = self.maxpool1(out)
+        
+        out = self.flatten(out)
+        out = out.unsqueeze(1)
+
+        out, (h_T, c_T) = self.lstm1(out)
+        out = out[:, -1, :]
+
+        out = out.unsqueeze(1)
+
+        out, attn_weights = self.attention(out)
+
+        out = self.flatten(out)
+        out = self.linear(out)
+
+        return out
+
 class GATAuto(nn.Module):
     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes):
         super(GATAuto, self).__init__()
