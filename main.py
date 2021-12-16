@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj, plot_adj_sym
-from models import FCN, CNN, RNN, GCN, GCNAuto, GCRAMAuto, GATAuto
+from models import FCN, CNN, RNN, GCN, GCNAuto, GCRAMAuto, GATAuto, GCRAM
 from params import PARAMS
 from train import get_dataloaders, train_model, init_model_params
 
@@ -119,6 +119,8 @@ def model_picker(model_name, random_seed, device):
         model = GCRAMAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
     elif model_name == 'imagine_gat_auto':
         model = GATAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+    elif model_name == 'imagine_gcram':
+        model = GCRAM(seq_len=PARAMS['SEQ_LEN'], cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], cnn_stride=PARAMS['GCRAM_CNN_STRIDE'], maxpool_kernel_size=PARAMS['GCRAM_MAXPOOL_KERNEL_SIZE'], maxpool_stride=PARAMS['GCRAM_MAXPOOL_STRIDE'], lstm_hidden_size=PARAMS['GCRAM_LSTM_HIDDEN_SIZE'], is_bidirectional=PARAMS['GCRAM_LSTM_IS_BIDIRECTIONAL'], lstm_n_layers=PARAMS['GCRAM_LSTM_N_LAYERS'], attn_embed_dim=PARAMS['GCRAM_ATTN_EMBED_DIM'], n_classes=PARAMS['N_CLASSES']).to(PARAMS['DEVICE'])
 
     model = model.to(device)
     model = init_model_params(model, random_seed=random_seed)
@@ -188,10 +190,10 @@ def main():
     
     ### For testing ###
     # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
-    # model_names = ['imagine_rnn']
+    model_names = ['imagine_gcram']
     # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto']
-    # random_seeds = random_seeds[:1]
-    # dataset_names = dataset_names[:1]
+    random_seeds = random_seeds[:1]
+    dataset_names = dataset_names[:1]
     ###################
 
     print('#' * 50)

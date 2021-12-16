@@ -1,4 +1,4 @@
-from layers import BatchGraphConvolutionLayer, BatchGraphAttentionLayer
+from layers import BatchGraphConvolutionLayer, BatchGraphAttentionLayer, SelfAttentionLayer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -240,44 +240,51 @@ class GCRAMAuto(nn.Module):
 #         return out
 
 class GCRAM(nn.Module):
-    def __init__(self, in_channels, n_kernels, kernel_size, seq_len, hidden_size, n_classes):
+    def __init__(self, seq_len, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes):
         super(GCRAM, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, n_kernels, kernel_size=kernel_size)
-        self.maxpool1 = nn.MaxPool2d(kernel_size=(1, 75), stride=10)
+        self.conv1 = nn.Conv2d(cnn_in_channels, cnn_n_kernels, kernel_size=cnn_kernel_size, stride=cnn_stride)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=maxpool_kernel_size, stride=maxpool_stride)
 
-        self.lstm1 = nn.LSTM(input_size=1520, hidden_size=64, batch_first=True, bidirectional=True, num_layers=2)
+        cnn_output_size = (seq_len - cnn_kernel_size[1])//cnn_stride + 1
+        maxpool_output_size = (cnn_output_size-maxpool_kernel_size[1])//maxpool_stride+1
+        lstm_input_size = maxpool_output_size * cnn_in_channels * cnn_n_kernels
+        self.lstm1 = nn.LSTM(input_size=lstm_input_size, hidden_size=lstm_hidden_size, batch_first=True, bidirectional=is_bidirectional, num_layers=lstm_n_layers)
 
-        self.dropout = nn.Dropout()
+        if is_bidirectional:
+            self.attention = SelfAttentionLayer(hidden_size=lstm_hidden_size*2, attention_size=attn_embed_dim, return_alphas=True)
+        else:
+            self.attention = SelfAttentionLayer(hidden_size=lstm_hidden_size, attention_size=attn_embed_dim, return_alphas=True)
+        
         self.flatten = nn.Flatten()
-        self.linear = nn.Linear(128, num_classes)
-        self.attention = nn.MultiheadAttention(embed_dim=128, num_heads=2, batch_first=True)
 
-        self.node_embeddings = torch.from_numpy(compute_adj_matrices('n') + np.eye(64, dtype=np.float32)).to(PARAMS['DEVICE'])
+        if is_bidirectional:
+            self.linear = nn.Linear(lstm_hidden_size*2, n_classes)
+        else:
+            self.linear = nn.Linear(lstm_hidden_size, n_classes)
+
+        self.node_embeddings = torch.from_numpy(compute_adj_matrices('n')).to(PARAMS['DEVICE'])
     def forward(self, x):
-        out = torch.mm(self.node_embeddings, self.node_embeddings.T)
-        # out = self.dropout(out)
+        out = torch.einsum("ij,kjl->kil", self.node_embeddings, x)
+
         out = out.unsqueeze(1)
 
         out = F.relu(self.conv1(out))
-
         out = self.maxpool1(out)
-
+        
         out = self.flatten(out)
-
-        out = out.reshape(out.shape[0], 1, -1)
+        out = out.unsqueeze(1)
 
         out, (h_T, c_T) = self.lstm1(out)
         out = out[:, -1, :]
 
-        # out = out.unsqueeze(1)
+        out = out.unsqueeze(1)
 
-        # out, attn_weights = self.attention(query=out, key=out, value=out)
+        out, attn_weights = self.attention(out)
 
         out = self.flatten(out)
         out = self.linear(out)
 
         return out
-
 class GATAuto(nn.Module):
     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes):
         super(GATAuto, self).__init__()

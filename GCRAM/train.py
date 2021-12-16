@@ -244,11 +244,11 @@ for layer in range(2):
 
 rnn_op = output
 print('rnn_op shape:', rnn_op)
+print('Attention size:', attention_size)
 ########################## attention ########################
 with tf.name_scope('Attention_layer'):
     attention_op, alphas = attention(rnn_op, attention_size, time_major = False, return_alphas=True)
 print('Attention shape', attention_op)
-# exit(1)
 
 attention_drop = tf.nn.dropout(attention_op, keep_prob)	
 y_ = cnn_2d.apply_readout(attention_drop, rnn_op.shape[2].value, num_labels)

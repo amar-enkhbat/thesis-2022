@@ -5,6 +5,41 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+class SelfAttentionLayer(nn.Module):
+    """
+    Original GC Layer from: https://github.com/tkipf/pygcn/blob/master/pygcn/layers.py
+    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
+    """
+
+    def __init__(self, hidden_size, attention_size, return_alphas=False):
+        super(SelfAttentionLayer, self).__init__()
+
+        self.hidden_size = hidden_size
+        self.attention_size = attention_size
+        self.return_alphas = return_alphas
+
+        self.w_omega = nn.Parameter(torch.empty(hidden_size, attention_size).normal_(mean=0.0, std=0.1))
+        self.b_omega = nn.Parameter(torch.empty(attention_size).normal_(mean=0.0, std=0.1))
+        self.u_omega = nn.Parameter(torch.empty(attention_size).normal_(mean=0.0, std=0.1))
+
+    def forward(self, inputs):
+        v = torch.tanh(torch.tensordot(inputs, self.w_omega, dims=1) + self.b_omega)
+        vu = torch.tensordot(v, self.u_omega, dims=1)
+        alphas = F.softmax(vu, dim=1)
+        output = torch.sum(inputs * alphas.unsqueeze(-1), 1)
+
+        if not self.return_alphas:
+            return output
+        else:
+            return output, alphas
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+               + str(self.hidden_size) + ' -> ' \
+               + str(self.attention_size) + ')'
+
+
+
 class GraphConvolutionLayer(nn.Module):
     """
     Original GC Layer from: https://github.com/tkipf/pygcn/blob/master/pygcn/layers.py

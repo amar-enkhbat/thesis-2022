@@ -150,7 +150,7 @@ def s_graph(num_node, loc):
 
     return A
 
-def compute_adj_matrices(type):
+def compute_adj_matrices(type, normalize=True):
     ch_names = pd.read_csv("./dataset/physionet.org_csv/S001/S001R01.csv")
     ch_names = ch_names.columns[2:]
     n_channels = 64
@@ -171,6 +171,7 @@ def compute_adj_matrices(type):
     elif type=='s':
         A = s_graph(n_channels, ch_pos_1010_dist)
 
-    A = normalize_adj(A)
+    if normalize:
+        A = normalize_adj(A)
     A = np.array(A, dtype=np.float32)
     return A

@@ -77,3 +77,30 @@ A = torch.mm(self.node_embeddings, self.node_embeddings.T)
 # Choosing subjects randomly
 When picking 5 subjects for training and 1 for testing, some subjects overlap.
 Originally decided to create mutually exclusive train and test sets but decided to not.
+
+# Einsum and matmul difference\
+```python
+def without_einsum(input, a):
+    output = []
+    for i in input:
+        output.append(torch.mm(a, i))
+    return torch.stack(output)
+
+def with_einsum(input, a):
+    return torch.einsum("ij,kjl->kil", a, input)
+```
+Einsum will work but due to floating point precision some values will be different.
+```python
+A_temp = torch.from_numpy(A_temp)
+output1 = without_einsum(input, A_temp).numpy()
+output2 = with_einsum(input, A_temp).numpy()
+
+print(np.unique(output1.round(3) == output2.round(3)))
+```
+returns:
+```
+[ True]
+```
+
+# 2021/12/15
+TODO: Implemet GCRAM and GCRAMAuto
