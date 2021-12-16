@@ -107,9 +107,8 @@ def n_graph():
     for i, j in edges:
         A[i, j] = 1
         A[j, i] = 1
-    A = A + np.eye(A.shape[0])
-    adj = normalize_adj(A)
-    return adj
+
+    return A
 
 def d_graph(num_node, loc):
     A = np.zeros([num_node, num_node])
@@ -128,8 +127,8 @@ def d_graph(num_node, loc):
         A[i, j] = 0
     for k in range(num_node):
         A[k,k]=np.mean(A[k])
-    adj = normalize_adj(A)
-    return adj
+
+    return A
 
 def s_graph(num_node, loc):
     A = np.zeros([num_node, num_node])
@@ -148,32 +147,15 @@ def s_graph(num_node, loc):
         A[i, j] = 0
     for k in range(num_node):
         A[k,k]=min(A[k])
-    adj = normalize_adj(A)
 
-    return adj
+    return A
 
 def compute_adj_matrices(type):
-    ten_twenty_montage = mne.channels.make_standard_montage("standard_1020")
     ch_names = pd.read_csv("./dataset/physionet.org_csv/S001/S001R01.csv")
     ch_names = ch_names.columns[2:]
     n_channels = 64
 
-    ch_pos_1020 = ten_twenty_montage.get_positions()["ch_pos"]
-
-    ch_pos_1010 = {}
-    for ch_name_orig in ch_names:
-        ch_name = ch_name_orig.upper().rstrip(".")
-        if "Z" in ch_name:
-            ch_name = ch_name.replace("Z", "z")
-        if "P" in ch_name and len(ch_name) > 2:
-            ch_name = ch_name.replace("P", "p")
-        if "Cp" in ch_name:
-            ch_name = ch_name.replace("Cp", "CP")
-        if "Tp" in ch_name:
-            ch_name = ch_name.replace("Tp", "TP")
-        if "pO" in ch_name:
-            ch_name = ch_name.replace("pO", "PO")
-        ch_pos_1010[ch_name_orig] = ch_pos_1020[ch_name]
+    ch_pos_1010 = get_sensor_pos(ch_names)
 
     ch_pos_1010_names = []
     ch_pos_1010_dist = []
@@ -181,7 +163,6 @@ def compute_adj_matrices(type):
         ch_pos_1010_names.append(name)
         ch_pos_1010_dist.append(value)
     ch_pos_1010_dist = np.array(ch_pos_1010_dist)
-
 
     if type=='n':
         A = n_graph()
