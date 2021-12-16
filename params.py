@@ -16,7 +16,7 @@ PARAMS = {
     'RANDOM_SEEDS': RANDOM_SEEDS,
 
     # Global Hyperparameters
-    'N_EPOCHS': 100,
+    'N_EPOCHS': 2,
     'LR': 0.001,
     'BATCH_SIZE': 32,
     'SEQ_LEN': 400,
