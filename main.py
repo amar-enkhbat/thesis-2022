@@ -182,18 +182,18 @@ def show_metrics(time_now, model_names, dataset_names, random_seeds):
 
 
 def main():
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto']
+    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
 
     dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
 
     random_seeds = PARAMS['RANDOM_SEEDS']
     
     ### For testing ###
-    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
     # model_names = ['imagine_gcram']
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
-    random_seeds = random_seeds[:1]
-    dataset_names = dataset_names[:1]
+    # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
+    # random_seeds = random_seeds[:1]
+    # dataset_names = dataset_names[:1]
     ###################
 
     print('#' * 50)
