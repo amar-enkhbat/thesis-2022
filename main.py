@@ -191,8 +191,8 @@ def show_metrics(time_now, model_names, dataset_names, random_seeds):
 def main():
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
 
-    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
-    # dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
+    # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
 
     random_seeds = PARAMS['RANDOM_SEEDS']
     
