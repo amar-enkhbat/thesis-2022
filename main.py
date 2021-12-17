@@ -122,8 +122,15 @@ def model_picker(model_name, random_seed, device):
     elif model_name == 'imagine_gcram':
         model = GCRAM(seq_len=PARAMS['SEQ_LEN'], cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], cnn_stride=PARAMS['GCRAM_CNN_STRIDE'], maxpool_kernel_size=PARAMS['GCRAM_MAXPOOL_KERNEL_SIZE'], maxpool_stride=PARAMS['GCRAM_MAXPOOL_STRIDE'], lstm_hidden_size=PARAMS['GCRAM_LSTM_HIDDEN_SIZE'], is_bidirectional=PARAMS['GCRAM_LSTM_IS_BIDIRECTIONAL'], lstm_n_layers=PARAMS['GCRAM_LSTM_N_LAYERS'], attn_embed_dim=PARAMS['GCRAM_ATTN_EMBED_DIM'], n_classes=PARAMS['N_CLASSES'])
 
-    model = model.to(device)
+    
     model = init_model_params(model, random_seed=random_seed)
+    
+    if 'auto' in model_name:
+        print(model.node_embeddings)
+        model.init_node_embeddings()
+        print(model.node_embeddings)
+
+    model = model.to(device)
 
     return model
 
@@ -184,14 +191,14 @@ def show_metrics(time_now, model_names, dataset_names, random_seeds):
 def main():
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
 
-    # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
-    dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
+    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    # dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
 
     random_seeds = PARAMS['RANDOM_SEEDS']
     
     ### For testing ###
     # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
-    # # model_names = ['imagine_gcram']
+    # # model_names = ['imagine_gcn_auto']
     # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
     # random_seeds = random_seeds[:1]
     # dataset_names = dataset_names[:1]

@@ -104,3 +104,12 @@ returns:
 
 # 2021/12/15
 TODO: Implemet GCRAM and GCRAMAuto
+
+# 2021/12/17
+Initialize node_embeddings:
+```python
+model = init_model_params(model, random_seed=random_seed)
+
+if 'auto' in model_name:
+    model.init_node_embeddings()
+```
