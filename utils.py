@@ -91,14 +91,14 @@ def plot_history(history, save_path):
     df = pd.DataFrame(history)
     df["Epochs"] = range(len(df))
     
-    fig = px.line(df, x='Epochs', y=['train_loss', 'val_loss'], labels={'value': 'Loss'})
+    fig = px.line(df, x='Epochs', y=['loss', 'val_loss'], labels={'value': 'Loss'})
     fig.write_html(os.path.join(save_path, 'history_loss.html'))
 
-    fig = px.line(df, x='Epochs', y=['train_acc', 'val_acc'], labels={'value': 'Loss'})
+    fig = px.line(df, x='Epochs', y=['acc', 'val_acc'], labels={'value': 'Loss'})
     fig.write_html(os.path.join(save_path, 'history_acc.html'))
 
-    fig = px.line(df, x='Epochs', y=['lrs'])
-    fig.write_html(os.path.join(save_path, 'history_lrs.html'))
+    # fig = px.line(df, x='Epochs', y=['lrs'])
+    # fig.write_html(os.path.join(save_path, 'history_lrs.html'))
 
 def plot_cm(cm, class_names, save_path):
     plt.figure(figsize=(7, 5))
@@ -118,18 +118,7 @@ def plot_adj(adj, save_path):
     plt.ylabel('True')
     plt.xlabel('Pred')
     plt.tight_layout()
-    plt.savefig(os.path.join(save_path, 'adj.png'))
-    # plt.show()
-    plt.clf()
-    plt.close()
-
-def plot_adj_sym(adj, save_path):
-    plt.figure(figsize=(7, 5))
-    sns.heatmap(adj, fmt='g')
-    plt.ylabel('True')
-    plt.xlabel('Pred')
-    plt.tight_layout()
-    plt.savefig(os.path.join(save_path, 'adj_sym.png'))
+    plt.savefig(save_path)
     # plt.show()
     plt.clf()
     plt.close()

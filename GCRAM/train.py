@@ -1,5 +1,4 @@
 import os
-import scipy.io as sio
 from utils import *
 from cnn_class import cnn
 from TfRnnAttention.attention import attention
@@ -10,7 +9,6 @@ import numpy as np
 import pandas as pd
 import pickle
 from convert_to_graphs import *
-from sklearn.metrics import confusion_matrix
 
 random_seed = 33
 tf.set_random_seed(random_seed)
@@ -47,12 +45,7 @@ test_y = np.asarray(pd.get_dummies(test_y.ravel()), dtype = np.int8)
 print("Y after pd.get_dummies:")
 print("train_y shape:", train_y.shape)
 print("test_y shape:", test_y.shape)
-#print(test_y[0])
-#test_y[1] = [1, 0, 0, 0]
-#test_y[2] = [0, 1, 0, 0]
-#test_y[3] = [0, 0, 1, 0]
-#test_y[4] = [0, 0, 0, 1]
-#exit()
+
 tmp_df = pd.read_csv("../dataset/physionet.org_csv/S001/S001R01.csv")
 ch_names = tmp_df.columns[2:]
 ch_pos_1010_dist, ch_pos_1010_names = get_sensor_pos(ch_names)
