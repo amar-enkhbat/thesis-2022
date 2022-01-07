@@ -235,8 +235,8 @@ def main():
     dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
-    random_seeds = random_seeds[:1]
-    dataset_names = dataset_names[:1]
+    # random_seeds = random_seeds[:1]
+    # dataset_names = dataset_names[:1]
     ###################
 
     print('#' * 50)
