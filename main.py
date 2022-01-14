@@ -48,6 +48,10 @@ def prepare_datasets(random_seed, dataset_name, results_path):
     X_train, y_train, X_test, y_test, label_map = load_data(dataset_path)
     class_names = list(label_map.keys())
 
+    """
+    Instead of using separate subjects for train and test datsets, 
+    mix all data then random pick train, valid test datasets
+    """ 
     X_train = np.vstack([X_train, X_test])
     y_train = np.hstack([y_train, y_test])
 
@@ -75,7 +79,7 @@ def prepare_datasets(random_seed, dataset_name, results_path):
     
     dataloaders = get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed, device=PARAMS['DEVICE'])
 
-    return dataloaders, class_names
+    return dataloaders
 
 def run_model(random_seed, dataloaders, class_names, model, results_path):    
     random.seed(random_seed)
@@ -97,10 +101,10 @@ def run_model(random_seed, dataloaders, class_names, model, results_path):
 
     plot_history(history, results_path)
     plot_cm(cm, class_names, results_path)
-    if 'gcn' in results_path:
-        plot_adj(model.node_embeddings.cpu().detach().numpy(), f'{results_path}/trained_adj.png')
-        pickle.dump(model.node_embeddings.cpu().detach().numpy(), open(f'{results_path}/trained_adj.pickle', 'wb'))
-        A = torch.mm(model.node_embeddings, model.node_embeddings.T)
+    if 'gcn' in results_path or 'auto' in results_path:
+        plot_adj(model.adj.cpu().detach().numpy(), f'{results_path}/trained_adj.png')
+        pickle.dump(model.adj.cpu().detach().numpy(), open(f'{results_path}/trained_adj.pickle', 'wb'))
+        A = torch.mm(model.adj, model.adj.T)
         plot_adj(A.cpu().detach().numpy(), f'{results_path}/trained_adj_sym.png')
     
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -112,15 +116,44 @@ def run_model(random_seed, dataloaders, class_names, model, results_path):
 
 def model_picker(model_name, random_seed, results_path, device):
     if model_name == 'imagine_fcn':
-        model = FCN(in_features=PARAMS['SEQ_LEN'], num_classes=PARAMS['N_CLASSES'], n_nodes=PARAMS['N_CHANNELS'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'], dropout_p=PARAMS['FCN_DROPOUT_P'])
+        model = FCN(in_features=PARAMS['SEQ_LEN'], 
+        num_classes=PARAMS['N_CLASSES'], 
+        n_nodes=PARAMS['N_CHANNELS'], 
+        hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'], 
+        dropout_p=PARAMS['FCN_DROPOUT_P'])
+
     elif model_name == 'imagine_cnn':
-        model = CNN(PARAMS['CNN_KERNEL_SIZE'], PARAMS['SEQ_LEN'], PARAMS['CNN_N_KERNELS'], PARAMS['CNN_HIDDEN_SIZE'], PARAMS['N_CLASSES'], dropout_p=PARAMS['CNN_DROPOUT_P'])
+        model = CNN(PARAMS['CNN_KERNEL_SIZE'], 
+        PARAMS['SEQ_LEN'], 
+        PARAMS['CNN_N_KERNELS'], 
+        PARAMS['CNN_HIDDEN_SIZE'], 
+        PARAMS['N_CLASSES'], 
+        dropout_p=PARAMS['CNN_DROPOUT_P'])
+
     elif model_name == 'imagine_rnn':
-        model = RNN(PARAMS['SEQ_LEN'], PARAMS['RNN_N_LAYERS'], PARAMS['RNN_HIDDEN_SIZE'], PARAMS['N_CLASSES'], dropout_p=PARAMS['RNN_DROPOUT_P'])
+        model = RNN(PARAMS['SEQ_LEN'], 
+        PARAMS['RNN_N_LAYERS'], 
+        PARAMS['RNN_HIDDEN_SIZE'], 
+        PARAMS['N_CLASSES'], 
+        dropout_p=PARAMS['RNN_DROPOUT_P'])
+
     elif model_name == 'imagine_gcn':
-        model = GCN(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['GCN_HIDDEN_SIZES'], graph_type='n', dropout_p=PARAMS['GCN_DROPOUT_P'], device=PARAMS['DEVICE'])
+        model = GCN(in_features=PARAMS['SEQ_LEN'], 
+        n_nodes=PARAMS['N_CHANNELS'], 
+        num_classes=PARAMS['N_CLASSES'], 
+        hidden_sizes=PARAMS['GCN_HIDDEN_SIZES'], 
+        graph_type='n', 
+        dropout_p=PARAMS['GCN_DROPOUT_P'], 
+        device=PARAMS['DEVICE'])
+
     elif model_name == 'imagine_gcn_auto':
-        model = GCNAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['GCNAUTO_HIDDEN_SIZES'], dropout_p=PARAMS['GCNAUTO_DROPOUT_P'], device=PARAMS['DEVICE'])
+        model = GCNAuto(in_features=PARAMS['SEQ_LEN'], 
+        n_nodes=PARAMS['N_CHANNELS'], 
+        num_classes=PARAMS['N_CLASSES'], 
+        hidden_sizes=PARAMS['GCNAUTO_HIDDEN_SIZES'], 
+        dropout_p=PARAMS['GCNAUTO_DROPOUT_P'], 
+        device=PARAMS['DEVICE'])
+
     elif model_name == 'imagine_gcram_auto':
         model = GCRAMAuto(seq_len=PARAMS['SEQ_LEN'], 
         cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], 
@@ -137,10 +170,16 @@ def model_picker(model_name, random_seed, results_path, device):
         dropout1_p=PARAMS['GCRAM_DROPOUT1_P'], 
         dropout2_p=PARAMS['GCRAM_DROPOUT2_P'], 
         device=PARAMS['DEVICE'])
+
     elif model_name == 'imagine_gat_auto':
-        model = GATAuto(in_features=PARAMS['SEQ_LEN'], n_nodes=PARAMS['N_CHANNELS'], num_classes=PARAMS['N_CLASSES'], hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+        model = GATAuto(in_features=PARAMS['SEQ_LEN'], 
+        n_nodes=PARAMS['N_CHANNELS'], 
+        num_classes=PARAMS['N_CLASSES'], 
+        hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
+
     elif model_name == 'imagine_gcram':
-        model = GCRAM(seq_len=PARAMS['SEQ_LEN'], 
+        model = GCRAM(graph_type='n', 
+        seq_len=PARAMS['SEQ_LEN'], 
         cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], 
         cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], 
         cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], 
@@ -155,17 +194,16 @@ def model_picker(model_name, random_seed, results_path, device):
         dropout1_p=PARAMS['GCRAM_DROPOUT1_P'], 
         dropout2_p=PARAMS['GCRAM_DROPOUT2_P'], 
         device=PARAMS['DEVICE'])
-
     
     model = init_model_params(model, random_seed=random_seed)
     
     if 'auto' in model_name:
         model.init_node_embeddings()
-        pickle.dump(model.node_embeddings.cpu().detach().numpy(), open(f'{results_path}/untrained_adj.pickle', 'wb'))
-        plot_adj(model.node_embeddings.cpu().detach().numpy(), f'{results_path}/untrained_adj.png')
+        if results_path is not None:
+            pickle.dump(model.adj.cpu().detach().numpy(), open(f'{results_path}/untrained_adj.pickle', 'wb'))
+            plot_adj(model.adj.cpu().detach().numpy(), f'{results_path}/untrained_adj.png')
 
     model = model.to(device)
-    
 
     return model
 
@@ -232,11 +270,11 @@ def main():
     random_seeds = PARAMS['RANDOM_SEEDS']
     
     ### For testing ###
-    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
-    # random_seeds = random_seeds[:1]
-    # dataset_names = dataset_names[:1]
+    model_names = ['imagine_gcn_auto', 'imagine_gcram_auto']
+    random_seeds = random_seeds[:1]
+    dataset_names = dataset_names[:1]
     ###################
 
     print('#' * 50)

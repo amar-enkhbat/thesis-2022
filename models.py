@@ -37,6 +37,7 @@ class FCN(nn.Module):
 class CNN(nn.Module):
     def __init__(self, kernel_size, seq_len, n_kernels, hidden_size, n_classes, dropout_p):
         super(CNN, self).__init__()
+
         self.dropout_p = dropout_p
 
         self.conv1 = nn.Conv2d(1, n_kernels, kernel_size=kernel_size)
@@ -61,6 +62,7 @@ class CNN(nn.Module):
 class RNN(nn.Module):
     def __init__(self, input_size, n_layers, hidden_size, n_classes, dropout_p):
         super(RNN, self).__init__()
+
         self.dropout_p = dropout_p
 
         self.n_layers = n_layers
@@ -68,8 +70,8 @@ class RNN(nn.Module):
         self.lstm1 = nn.LSTM(input_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
 
         self.fc = nn.Linear(hidden_size, n_classes)
-    def forward(self, x):
 
+    def forward(self, x):
         out, _ = self.lstm1(x)
         # out: batch_size, seq_length, hidden_size
         # out: (N, 28, 128)
@@ -79,8 +81,9 @@ class RNN(nn.Module):
         return out
 
 class GCN(nn.Module):
-    def __init__(self, in_features, n_nodes, num_classes, hidden_sizes, graph_type, dropout_p, device):
+    def __init__(self, graph_type, in_features, n_nodes, num_classes, hidden_sizes, dropout_p, device):
         super(GCN, self).__init__()
+
         self.dropout_p = dropout_p
 
         self.gc1 = BatchGraphConvolutionLayer(in_features, hidden_sizes[0], n_nodes)
@@ -90,17 +93,16 @@ class GCN(nn.Module):
         self.flatten = nn.Flatten()
         self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
 
-        self.identity = torch.eye(n_nodes).to(device)
-        self.node_embeddings = torch.from_numpy(compute_adj_matrices(graph_type)).to(device)
+        self.adj = torch.from_numpy(compute_adj_matrices(graph_type)).to(device)
 
     def forward(self, x):
-        out = F.relu(self.gc1(x, self.node_embeddings))
+        out = F.relu(self.gc1(x, self.adj))
         out = F.dropout(out, p=self.dropout_p)
 
-        out = F.relu(self.gc2(out, self.node_embeddings))
+        out = F.relu(self.gc2(out, self.adj))
         out = F.dropout(out, p=self.dropout_p)
         
-        out = F.relu(self.gc3(out, self.node_embeddings))
+        out = F.relu(self.gc3(out, self.adj))
         out = F.dropout(out, p=self.dropout_p)
 
         out = self.flatten(out)
@@ -111,6 +113,7 @@ class GCN(nn.Module):
 class GCNAuto(nn.Module):
     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes, dropout_p, device):
         super(GCNAuto, self).__init__()
+
         self.dropout_p = dropout_p
 
         self.gc1 = BatchGraphConvolutionLayer(in_features, hidden_sizes[0], n_nodes)
@@ -120,19 +123,16 @@ class GCNAuto(nn.Module):
         self.flatten = nn.Flatten()
         self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
 
-        self.node_embeddings = nn.Parameter(torch.randn(n_nodes, n_nodes))
+        self.adj = nn.Parameter(torch.randn(n_nodes, n_nodes))
 
     def forward(self, x):
-        # x dim: [N, n_nodes, node_feat]
-        # x_dim: [32, 64, 100]
-        # print('Node embeddings:')
-        # print(self.node_embeddings.shape)
-        out = F.relu(self.gc1(x, self.node_embeddings))
+        out = F.relu(self.gc1(x, self.adj))
         out = F.dropout(out, p=self.dropout_p)
-        # [N, n_nodes, out_features]
-        out = F.relu(self.gc2(out, self.node_embeddings))
+
+        out = F.relu(self.gc2(out, self.adj))
         out = F.dropout(out, p=self.dropout_p)
-        out = F.relu(self.gc3(out, self.node_embeddings))
+
+        out = F.relu(self.gc3(out, self.adj))
         out = F.dropout(out, p=self.dropout_p)
 
         out = self.flatten(out)
@@ -141,12 +141,12 @@ class GCNAuto(nn.Module):
         return out
 
     def init_node_embeddings(self):
-        stdv = 1. / math.sqrt(self.node_embeddings.size(1))
-        self.node_embeddings.data.uniform_(-stdv, stdv)
-        self.node_embeddings.data.fill_diagonal_(1)
+        stdv = 1. / math.sqrt(self.adj.size(1))
+        self.adj.data.uniform_(-stdv, stdv)
+        self.adj.data.fill_diagonal_(1)
         
 class GCRAM(nn.Module):
-    def __init__(self, seq_len, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
+    def __init__(self, graph_type, seq_len, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
         super(GCRAM, self).__init__()
 
         self.dropout1_p = dropout1_p
@@ -172,9 +172,10 @@ class GCRAM(nn.Module):
         else:
             self.linear = nn.Linear(lstm_hidden_size, n_classes)
 
-        self.node_embeddings = torch.from_numpy(compute_adj_matrices('n')).to(device)
+        self.adj = torch.from_numpy(compute_adj_matrices(graph_type)).to(device)
+
     def forward(self, x):
-        out = torch.einsum("ij,kjl->kil", self.node_embeddings, x)
+        out = torch.einsum("ij,kjl->kil", self.adj, x)
 
         out = out.unsqueeze(1)
 
@@ -225,11 +226,10 @@ class GCRAMAuto(nn.Module):
         else:
             self.linear = nn.Linear(lstm_hidden_size, n_classes)
 
-        self.node_embeddings = nn.Parameter(torch.randn(64, 64), requires_grad=True)
+        self.adj = nn.Parameter(torch.randn(64, 64), requires_grad=True)
         
     def forward(self, x):
-
-        out = torch.einsum("ij,kjl->kil", self.node_embeddings, x)
+        out = torch.einsum("ij,kjl->kil", self.adj, x)
 
         out = out.unsqueeze(1)
 
@@ -254,9 +254,9 @@ class GCRAMAuto(nn.Module):
         return out
 
     def init_node_embeddings(self):
-        stdv = 1. / math.sqrt(self.node_embeddings.size(1))
-        self.node_embeddings.data.uniform_(-stdv, stdv)
-        self.node_embeddings.data.fill_diagonal_(1)
+        stdv = 1. / math.sqrt(self.adj.size(1))
+        self.adj.data.uniform_(-stdv, stdv)
+        self.adj.data.fill_diagonal_(1)
 
 class GATAuto(nn.Module):
     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes, dropout_p):
@@ -271,17 +271,11 @@ class GATAuto(nn.Module):
         self.flatten = nn.Flatten()
         self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
 
-        self.node_embeddings = nn.Parameter(torch.randn(n_nodes, n_nodes))
+        self.adj = nn.Parameter(torch.randn(n_nodes, n_nodes))
     def forward(self, x):
-
-        # x dim: [N, n_nodes, node_feat]
-        # x_dim: [32, 64, 100]
-        # print('Node embeddings:')
-        # print(self.node_embeddings.shape)
-        out = F.relu(self.gat1(x, self.node_embeddings))
-        # [N, n_nodes, out_features]
-        out = F.relu(self.gat2(out, self.node_embeddings))
-        out = F.relu(self.gat3(out, self.node_embeddings))
+        out = F.relu(self.gat1(x, self.adj))
+        out = F.relu(self.gat2(out, self.adj))
+        out = F.relu(self.gat3(out, self.adj))
 
         out = self.flatten(out)
         out = self.linear(out)
@@ -289,6 +283,6 @@ class GATAuto(nn.Module):
         return out
 
     def init_node_embeddings(self):
-        stdv = 1. / math.sqrt(self.node_embeddings.size(1))
-        self.node_embeddings.data.uniform_(-stdv, stdv)
-        self.node_embeddings.data.fill_diagonal_(1)
+        stdv = 1. / math.sqrt(self.adj.size(1))
+        self.adj.data.uniform_(-stdv, stdv)
+        self.adj.data.fill_diagonal_(1)

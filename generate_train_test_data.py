@@ -92,5 +92,7 @@ def main():
         cross_subject_data = create_cross_subject_data(train_idc, test_idc)
         pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}_5_subjects.pickle", "wb"))
 
+    # Dataset for each subjects.
+
 if __name__ == "__main__":
     main()

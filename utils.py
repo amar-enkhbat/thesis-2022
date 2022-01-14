@@ -8,6 +8,8 @@ import seaborn as sns
 import plotly.express as px
 import matplotlib.pyplot as plt
 
+from params import PARAMS
+
 def load_data(dataset_path):
     dataset = pickle.load(open(dataset_path, 'rb'))
     y_train = dataset['y_train']
@@ -15,11 +17,10 @@ def load_data(dataset_path):
     y_test = dataset['y_test']
     X_test = dataset['X_test'].astype(np.float32)
 
-    label_map = {'imagine_both_feet': 0, 'imagine_both_fist': 1, 'imagine_left_fist': 2, 'imagine_right_fist': 3}
-    y_train = np.vectorize(label_map.__getitem__)(y_train)
-    y_test = np.vectorize(label_map.__getitem__)(y_test)
+    y_train = np.vectorize(PARAMS['LABEL_MAP'].__getitem__)(y_train)
+    y_test = np.vectorize(PARAMS['LABEL_MAP'].__getitem__)(y_test)
 
-    return X_train, y_train, X_test, y_test, label_map
+    return X_train, y_train, X_test, y_test
 
 def prepare_data(X, y, seq_len):
     n_channels = X.shape[1]
@@ -72,7 +73,8 @@ def prepare_data_rnn(X, y, seq_len):
 
 
 def print_classification_report(y_true, y_preds, num_classes, class_names):
-    cr = classification_report(y_true, y_preds, output_dict=True, target_names=class_names)
+    # cr = classification_report(y_true, y_preds, output_dict=True, target_names=class_names)
+    cr = classification_report(y_true, y_preds, output_dict=True)
 
     cm = confusion_matrix(y_true, y_preds)
 
@@ -102,7 +104,8 @@ def plot_history(history, save_path):
 
 def plot_cm(cm, class_names, save_path):
     plt.figure(figsize=(7, 5))
-    cm_df = pd.DataFrame(cm, columns=class_names, index=class_names)
+    # cm_df = pd.DataFrame(cm, columns=class_names, index=class_names)
+    cm_df = pd.DataFrame(cm)
     sns.heatmap(cm_df, annot=True, fmt='g')
     plt.ylabel('True')
     plt.xlabel('Pred')

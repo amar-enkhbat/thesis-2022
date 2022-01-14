@@ -10,10 +10,11 @@ PARAMS = {
     # Environment
     'DEVICE': DEVICE,
     'N_SUBJECTS': 5,
-    'N_CLASSES': 4,
+    'N_CLASSES': 2,
     'N_CHANNELS': 64,
     'N_RUNS': N_RUNS,
     'RANDOM_SEEDS': RANDOM_SEEDS,
+    'LABEL_MAP': {'imagine_left_fist': 0, 'imagine_right_fist': 1, 'imagine_both_feet': 2, 'imagine_both_fist': 3},
 
     # Global Hyperparameters
     'N_EPOCHS': 100,
@@ -36,8 +37,8 @@ PARAMS = {
     'RNN_HIDDEN_SIZE': 256,
     'RNN_N_LAYERS': 2,
     'RNN_DROPOUT_P': 0.4,
-    'TEST_SIZE': 1/6,
-    'VALID_SIZE': 1/5,
+    'TEST_SIZE': 1/10,
+    'VALID_SIZE': 1/10,
 
     # GCN hyperparameters
     'GCN_HIDDEN_SIZES': (256, 512, 256),
@@ -65,5 +66,5 @@ PARAMS = {
     'GCRAM_HIDDEN_SIZE': 512,
 
     # GAT hyperparameters
-
+    
 }   

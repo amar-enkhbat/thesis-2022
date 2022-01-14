@@ -1,12 +1,13 @@
 .vscode/
 env/
 env_tf/
+env_torch_geometric/
 dataset/
 .python-version
 *.pyc
 __pycache__/
 __init__.py
 output/
-*.ipynb
+# *.ipynb
 runs/
 

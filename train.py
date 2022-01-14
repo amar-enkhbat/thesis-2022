@@ -122,15 +122,15 @@ This function is copied from:
 https://inside-machinelearning.com/en/the-ideal-pytorch-function-to-train-your-model-easily/#The_training_function
 This function is overall easy to understand than function above.
 """
-def train_model_2(model, optimizer, loss_fn, train_dl, val_dl, epochs, random_seed, device):
+def train_model_2(model, optimizer, scheduler, loss_fn, train_dl, val_dl, epochs, random_seed, device):
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
 
-    # print('train() called: model=%s, opt=%s(lr=%f), epochs=%d, device=%s\n' % \
-    #       (type(model).__name__, type(optimizer).__name__,
-    #        optimizer.param_groups[0]['lr'], epochs, device))
+    print('train() called: model=%s, opt=%s(lr=%f), epochs=%d, device=%s\n' % \
+          (type(model).__name__, type(optimizer).__name__,
+           optimizer.param_groups[0]['lr'], epochs, device))
 
     history = {} # Collects per-epoch loss and acc like Keras' fit().
     history['loss'] = []
@@ -167,6 +167,8 @@ def train_model_2(model, optimizer, loss_fn, train_dl, val_dl, epochs, random_se
         train_acc   = num_train_correct / num_train_examples
         train_loss  = train_loss / len(train_dl.dataset)
 
+        if epoch % 10:
+            scheduler.step()
 
         # --- EVALUATE ON VALIDATION SET -------------------------------------
         model.eval()
@@ -189,9 +191,9 @@ def train_model_2(model, optimizer, loss_fn, train_dl, val_dl, epochs, random_se
         val_loss = val_loss / len(val_dl.dataset)
 
 
-        # if epoch == 1 or epoch % 10 == 0:
-        #   print('Epoch %3d/%3d, train loss: %5.4f, train acc: %5.4f, val loss: %5.4f, val acc: %5.4f' % \
-        #         (epoch, epochs, train_loss, train_acc, val_loss, val_acc))
+        if epoch == 1 or epoch % 10 == 0:
+          print('Epoch %3d/%3d, LR %5.4f, train loss: %5.4f, train acc: %5.4f, val loss: %5.4f, val acc: %5.4f' % \
+                (epoch, epochs, scheduler.get_lr()[-1], train_loss, train_acc, val_loss, val_acc))
 
         history['loss'].append(train_loss)
         history['val_loss'].append(val_loss)
@@ -204,8 +206,8 @@ def train_model_2(model, optimizer, loss_fn, train_dl, val_dl, epochs, random_se
     end_time_sec       = time.time()
     total_time_sec     = end_time_sec - start_time_sec
     time_per_epoch_sec = total_time_sec / epochs
-    # print()
-    # print('Time total:     %5.2f sec' % (total_time_sec))
-    # print('Time per epoch: %5.2f sec' % (time_per_epoch_sec))
+    print()
+    print('Time total:     %5.2f sec' % (total_time_sec))
+    print('Time per epoch: %5.2f sec' % (time_per_epoch_sec))
 
     return model, history
