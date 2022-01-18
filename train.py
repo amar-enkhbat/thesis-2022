@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset
 import time
 import random
+import copy
 import numpy as np
 
 def get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, batch_size, random_seed, device):
@@ -128,6 +129,9 @@ def train_model_2(model, optimizer, scheduler, loss_fn, train_dl, val_dl, epochs
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
 
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_acc = 0.0
+
     if verbose:
         print('train() called: model=%s, opt=%s(lr=%f), epochs=%d, device=%s\n' % \
           (type(model).__name__, type(optimizer).__name__,
@@ -191,6 +195,9 @@ def train_model_2(model, optimizer, scheduler, loss_fn, train_dl, val_dl, epochs
         val_acc  = num_val_correct / num_val_examples
         val_loss = val_loss / len(val_dl.dataset)
 
+        if val_acc > best_acc:
+            best_acc = val_acc
+            best_model_wts = copy.deepcopy(model.state_dict())
 
         if epoch == 1 or epoch % 10 == 0:
             if verbose:
@@ -213,5 +220,7 @@ def train_model_2(model, optimizer, scheduler, loss_fn, train_dl, val_dl, epochs
         print()
         print('Time total:     %5.2f sec' % (total_time_sec))
         print('Time per epoch: %5.2f sec' % (time_per_epoch_sec))
+        print('Best val Acc: {:4f}'.format(best_acc))
 
+    model.load_state_dict(best_model_wts)
     return model, history

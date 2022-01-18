@@ -85,20 +85,20 @@ def run_model(random_seed, dataloaders, model, results_path):
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS['LR'])
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, PARAMS['SCHEDULER_STEP_SIZE'], PARAMS['SCHEDULER_GAMMA'])
 
-    model, history = train_model_2(model, optimizer, scheduler, criterion, dataloaders['train'], dataloaders['val'], PARAMS['N_EPOCHS'], random_seed, PARAMS['DEVICE'])
-    model = model.to(PARAMS['DEVICE'])
+    best_model, history = train_model_2(model, optimizer, scheduler, criterion, dataloaders['train'], dataloaders['val'], PARAMS['N_EPOCHS'], random_seed, PARAMS['DEVICE'])
+    best_model = best_model.to(PARAMS['DEVICE'])
 
-    y_preds, y_test = model_predict(model, test_loader=dataloaders['test'])
+    y_preds, y_test = model_predict(best_model, test_loader=dataloaders['test'])
 
     cr, cm, auroc = print_classification_report(y_test, y_preds, PARAMS['N_CLASSES'])
 
     plot_history(history, results_path)
     plot_cm(cm, results_path)
     if 'gcn' in results_path or 'auto' in results_path:
-        plot_adj(model.adj.cpu().detach().numpy(), f'{results_path}/trained_adj.png')
-        pickle.dump(model.adj.cpu().detach().numpy(), open(f'{results_path}/trained_adj.pickle', 'wb'))
+        plot_adj(best_model.adj.cpu().detach().numpy(), f'{results_path}/trained_adj.png')
+        pickle.dump(best_model.adj.cpu().detach().numpy(), open(f'{results_path}/trained_adj.pickle', 'wb'))
     
-    n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    n_params = sum(p.numel() for p in best_model.parameters() if p.requires_grad)
 
     results = {'history': history, 'cm': cm.tolist(), 'cr': cr,'auroc': auroc , 'n_params': n_params}
     with open(os.path.join(results_path, 'results.pickle'), 'wb') as f:
