@@ -72,7 +72,7 @@ def prepare_data_rnn(X, y, seq_len):
 
 
 
-def print_classification_report(y_true, y_preds, num_classes, class_names):
+def print_classification_report(y_true, y_preds, num_classes):
     # cr = classification_report(y_true, y_preds, output_dict=True, target_names=class_names)
     cr = classification_report(y_true, y_preds, output_dict=True)
 
@@ -102,7 +102,7 @@ def plot_history(history, save_path):
     # fig = px.line(df, x='Epochs', y=['lrs'])
     # fig.write_html(os.path.join(save_path, 'history_lrs.html'))
 
-def plot_cm(cm, class_names, save_path):
+def plot_cm(cm, save_path):
     plt.figure(figsize=(7, 5))
     # cm_df = pd.DataFrame(cm, columns=class_names, index=class_names)
     cm_df = pd.DataFrame(cm)

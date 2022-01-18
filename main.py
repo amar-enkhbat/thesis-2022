@@ -1,6 +1,4 @@
 import warnings
-
-from torch.nn.functional import dropout
 warnings.filterwarnings("ignore")
 
 import os
@@ -11,7 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj
-from models import FCN, CNN, RNN, GCN, GCNAuto, GCRAMAuto, GATAuto, GCRAM
+from models import FCN, CNN, RNN, GCN, GCNAuto, GCRAMAuto, GCRAM
 from params import PARAMS
 from train import get_dataloaders, train_model_2, init_model_params
 
@@ -45,8 +43,7 @@ def prepare_datasets(random_seed, dataset_name, results_path):
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
     dataset_path = os.path.join('./dataset/train', dataset_name + '.pickle')
-    X_train, y_train, X_test, y_test, label_map = load_data(dataset_path)
-    class_names = list(label_map.keys())
+    X_train, y_train, X_test, y_test = load_data(dataset_path)
 
     """
     Instead of using separate subjects for train and test datsets, 
@@ -70,9 +67,6 @@ def prepare_datasets(random_seed, dataset_name, results_path):
     elif 'gcram' in results_path:
         X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
         # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
-    elif 'gat' in results_path:
-        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
-        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
 
     X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed)
     X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['VALID_SIZE'], shuffle=True, random_state=random_seed)
@@ -81,7 +75,7 @@ def prepare_datasets(random_seed, dataset_name, results_path):
 
     return dataloaders
 
-def run_model(random_seed, dataloaders, class_names, model, results_path):    
+def run_model(random_seed, dataloaders, model, results_path):    
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
@@ -89,27 +83,24 @@ def run_model(random_seed, dataloaders, class_names, model, results_path):
     
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAMS['LR'])
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, PARAMS['SCHEDULER_STEPSIZE'], PARAMS['SCHEDULER_GAMMA'])
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, PARAMS['SCHEDULER_STEP_SIZE'], PARAMS['SCHEDULER_GAMMA'])
 
-    # best_model, history = train_model(dataloaders, dataset_sizes, model, criterion, optimizer, scheduler, PARAMS['N_EPOCHS'], random_seed=random_seed)
-    best_model, history = train_model_2(model, optimizer, criterion, dataloaders['train'], dataloaders['val'], PARAMS['N_EPOCHS'], random_seed, PARAMS['DEVICE'])
-    best_model = best_model.to(PARAMS['DEVICE'])
+    model, history = train_model_2(model, optimizer, scheduler, criterion, dataloaders['train'], dataloaders['val'], PARAMS['N_EPOCHS'], random_seed, PARAMS['DEVICE'])
+    model = model.to(PARAMS['DEVICE'])
 
-    y_preds, y_test = model_predict(best_model, test_loader=dataloaders['test'])
+    y_preds, y_test = model_predict(model, test_loader=dataloaders['test'])
 
-    cr, cm, auroc = print_classification_report(y_test, y_preds, PARAMS['N_CLASSES'], class_names)
+    cr, cm, auroc = print_classification_report(y_test, y_preds, PARAMS['N_CLASSES'])
 
     plot_history(history, results_path)
-    plot_cm(cm, class_names, results_path)
+    plot_cm(cm, results_path)
     if 'gcn' in results_path or 'auto' in results_path:
         plot_adj(model.adj.cpu().detach().numpy(), f'{results_path}/trained_adj.png')
         pickle.dump(model.adj.cpu().detach().numpy(), open(f'{results_path}/trained_adj.pickle', 'wb'))
-        A = torch.mm(model.adj, model.adj.T)
-        plot_adj(A.cpu().detach().numpy(), f'{results_path}/trained_adj_sym.png')
     
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    results = {'history': history, 'cm': cm.tolist(), 'cr': cr,'auroc': auroc , 'n_params': n_params, 'class_names': class_names}
+    results = {'history': history, 'cm': cm.tolist(), 'cr': cr,'auroc': auroc , 'n_params': n_params}
     with open(os.path.join(results_path, 'results.pickle'), 'wb') as f:
         pickle.dump(results, f)
 
@@ -147,11 +138,30 @@ def model_picker(model_name, random_seed, results_path, device):
         device=PARAMS['DEVICE'])
 
     elif model_name == 'imagine_gcn_auto':
-        model = GCNAuto(in_features=PARAMS['SEQ_LEN'], 
+        model = GCNAuto(kernel_type=PARAMS['GCNAUTO_KERNEL_TYPE'],
+        in_features=PARAMS['SEQ_LEN'], 
         n_nodes=PARAMS['N_CHANNELS'], 
         num_classes=PARAMS['N_CLASSES'], 
         hidden_sizes=PARAMS['GCNAUTO_HIDDEN_SIZES'], 
         dropout_p=PARAMS['GCNAUTO_DROPOUT_P'], 
+        device=PARAMS['DEVICE'])
+
+    elif model_name == 'imagine_gcram':
+        model = GCRAM(graph_type='n', 
+        seq_len=PARAMS['SEQ_LEN'], 
+        cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], 
+        cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], 
+        cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], 
+        cnn_stride=PARAMS['GCRAM_CNN_STRIDE'], 
+        maxpool_kernel_size=PARAMS['GCRAM_MAXPOOL_KERNEL_SIZE'], maxpool_stride=PARAMS['GCRAM_MAXPOOL_STRIDE'], 
+        lstm_hidden_size=PARAMS['GCRAM_LSTM_HIDDEN_SIZE'], 
+        is_bidirectional=PARAMS['GCRAM_LSTM_IS_BIDIRECTIONAL'], 
+        lstm_n_layers=PARAMS['GCRAM_LSTM_N_LAYERS'], 
+        attn_embed_dim=PARAMS['GCRAM_ATTN_EMBED_DIM'], 
+        n_classes=PARAMS['N_CLASSES'], 
+        lstm_dropout_p=PARAMS['GCRAM_LSTM_DROPOUT_P'], 
+        dropout1_p=PARAMS['GCRAM_DROPOUT1_P'], 
+        dropout2_p=PARAMS['GCRAM_DROPOUT2_P'], 
         device=PARAMS['DEVICE'])
 
     elif model_name == 'imagine_gcram_auto':
@@ -171,29 +181,7 @@ def model_picker(model_name, random_seed, results_path, device):
         dropout2_p=PARAMS['GCRAM_DROPOUT2_P'], 
         device=PARAMS['DEVICE'])
 
-    elif model_name == 'imagine_gat_auto':
-        model = GATAuto(in_features=PARAMS['SEQ_LEN'], 
-        n_nodes=PARAMS['N_CHANNELS'], 
-        num_classes=PARAMS['N_CLASSES'], 
-        hidden_sizes=PARAMS['FCN_HIDDEN_SIZES'])
 
-    elif model_name == 'imagine_gcram':
-        model = GCRAM(graph_type='n', 
-        seq_len=PARAMS['SEQ_LEN'], 
-        cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], 
-        cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], 
-        cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], 
-        cnn_stride=PARAMS['GCRAM_CNN_STRIDE'], 
-        maxpool_kernel_size=PARAMS['GCRAM_MAXPOOL_KERNEL_SIZE'], maxpool_stride=PARAMS['GCRAM_MAXPOOL_STRIDE'], 
-        lstm_hidden_size=PARAMS['GCRAM_LSTM_HIDDEN_SIZE'], 
-        is_bidirectional=PARAMS['GCRAM_LSTM_IS_BIDIRECTIONAL'], 
-        lstm_n_layers=PARAMS['GCRAM_LSTM_N_LAYERS'], 
-        attn_embed_dim=PARAMS['GCRAM_ATTN_EMBED_DIM'], 
-        n_classes=PARAMS['N_CLASSES'], 
-        lstm_dropout_p=PARAMS['GCRAM_LSTM_DROPOUT_P'], 
-        dropout1_p=PARAMS['GCRAM_DROPOUT1_P'], 
-        dropout2_p=PARAMS['GCRAM_DROPOUT2_P'], 
-        device=PARAMS['DEVICE'])
     
     model = init_model_params(model, random_seed=random_seed)
     
@@ -270,9 +258,9 @@ def main():
     random_seeds = PARAMS['RANDOM_SEEDS']
     
     ### For testing ###
-    dataset_names = [f'cross_subject_data_{i}' for i in range(5)]
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram_auto', 'imagine_gat_auto', 'imagine_gcram']
-    model_names = ['imagine_gcn_auto', 'imagine_gcram_auto']
+    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
+    # model_names = ['imagine_gcn_auto', 'imagine_gcram_auto']
     random_seeds = random_seeds[:1]
     dataset_names = dataset_names[:1]
     ###################
@@ -303,12 +291,11 @@ def main():
                 with open(os.path.join('output', time_now, 'params.txt'), 'w') as f:
                     f.write(str(PARAMS))
 
-                dataloaders, class_names = prepare_datasets(random_seed, dataset_name, results_path)
+                dataloaders = prepare_datasets(random_seed, dataset_name, results_path)
 
                 
                 model = model_picker(model_name, random_seed, results_path, device=PARAMS['DEVICE'])
-                # summary(model, input_size=(32, 64, 100))
-                run_model(random_seed, dataloaders, class_names, model, results_path)
+                run_model(random_seed, dataloaders, model, results_path)
 
     final_results = show_metrics(time_now, model_names, dataset_names, random_seeds)
 

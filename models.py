@@ -111,10 +111,12 @@ class GCN(nn.Module):
         return out
 
 class GCNAuto(nn.Module):
-    def __init__(self, in_features, n_nodes, num_classes, hidden_sizes, dropout_p, device):
+    def __init__(self, kernel_type, in_features, n_nodes, num_classes, hidden_sizes, dropout_p, device):
         super(GCNAuto, self).__init__()
 
+        self.kernel_type = kernel_type
         self.dropout_p = dropout_p
+        
 
         self.gc1 = BatchGraphConvolutionLayer(in_features, hidden_sizes[0], n_nodes)
         self.gc2 = BatchGraphConvolutionLayer(hidden_sizes[0], hidden_sizes[1], n_nodes)
@@ -123,16 +125,26 @@ class GCNAuto(nn.Module):
         self.flatten = nn.Flatten()
         self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
 
+        self.eye = torch.eye(n_nodes, device=device)
         self.adj = nn.Parameter(torch.randn(n_nodes, n_nodes))
 
     def forward(self, x):
-        out = F.relu(self.gc1(x, self.adj))
+        if self.kernel_type == 'a':
+            adj = self.kernel_a()
+        if self.kernel_type == 'b':
+            adj = self.kernel_b()
+        if self.kernel_type == 'c':
+            adj = self.kernel_c()
+        if self.kernel_type == 'd':
+            adj = self.kernel_d()
+
+        out = F.relu(self.gc1(x, adj))
         out = F.dropout(out, p=self.dropout_p)
 
-        out = F.relu(self.gc2(out, self.adj))
+        out = F.relu(self.gc2(out, adj))
         out = F.dropout(out, p=self.dropout_p)
 
-        out = F.relu(self.gc3(out, self.adj))
+        out = F.relu(self.gc3(out, adj))
         out = F.dropout(out, p=self.dropout_p)
 
         out = self.flatten(out)
@@ -140,6 +152,18 @@ class GCNAuto(nn.Module):
 
         return out
 
+    def kernel_a(self):
+        return self.adj
+
+    def kernel_b(self):
+        return torch.mm(self.adj, self.adj.T)
+
+    def kernel_c(self):
+        return torch.mm(self.adj, self.adj.T) + self.eye
+
+    def kernel_d(self):
+        return F.softmax(torch.mm(self.adj, self.adj.T) + self.eye) 
+    
     def init_node_embeddings(self):
         stdv = 1. / math.sqrt(self.adj.size(1))
         self.adj.data.uniform_(-stdv, stdv)
@@ -259,6 +283,7 @@ class GCRAMAuto(nn.Module):
         self.adj.data.fill_diagonal_(1)
 
 class GATAuto(nn.Module):
+    """DOES NOT WORK!!!"""
     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes, dropout_p):
         super(GATAuto, self).__init__()
 

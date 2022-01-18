@@ -51,7 +51,7 @@ def main():
     exclusions = ["S088", "S089", "S092", "S100"]
     subjects_idc = [f"S{i:03d}" for i in range(1, 110)]
     subjects_idc = [i for i in subjects_idc if i not in exclusions]
-    print('Total number of available subjets:', len(subjects_idc))
+    print('Total number of available subjects:', len(subjects_idc))
 
     if not os.path.isdir("./dataset/train"):
         os.mkdir("./dataset/train")

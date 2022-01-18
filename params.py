@@ -10,17 +10,19 @@ PARAMS = {
     # Environment
     'DEVICE': DEVICE,
     'N_SUBJECTS': 5,
-    'N_CLASSES': 2,
+    'N_CLASSES': 4,
     'N_CHANNELS': 64,
     'N_RUNS': N_RUNS,
     'RANDOM_SEEDS': RANDOM_SEEDS,
     'LABEL_MAP': {'imagine_left_fist': 0, 'imagine_right_fist': 1, 'imagine_both_feet': 2, 'imagine_both_fist': 3},
 
     # Global Hyperparameters
-    'N_EPOCHS': 100,
+    'N_EPOCHS': 300,
     'LR': 0.001,
     'BATCH_SIZE': 64,
     'SEQ_LEN': 100,
+    'SCHEDULER_STEP_SIZE': 10,
+    'SCHEDULER_GAMMA': 0.9,
     
     # FCN hyperparameters
     'FCN_HIDDEN_SIZES': (256, 512, 256),
@@ -45,6 +47,7 @@ PARAMS = {
     'GCN_DROPOUT_P': 0.4,
 
     # GCNAuto hyperparameters
+    'GCNAUTO_KERNEL_TYPE': 'a',
     'GCNAUTO_HIDDEN_SIZES': (256, 512, 256),
     'GCNAUTO_DROPOUT_P': 0.4,
 
