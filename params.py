@@ -17,7 +17,7 @@ PARAMS = {
     'LABEL_MAP': {'imagine_left_fist': 0, 'imagine_right_fist': 1, 'imagine_both_feet': 2, 'imagine_both_fist': 3},
 
     # Global Hyperparameters
-    'N_EPOCHS': 300,
+    'N_EPOCHS': 2,
     'LR': 0.001,
     'BATCH_SIZE': 64,
     'SEQ_LEN': 100,
