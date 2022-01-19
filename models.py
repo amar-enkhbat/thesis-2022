@@ -250,7 +250,7 @@ class GCRAMAuto(nn.Module):
         else:
             self.linear = nn.Linear(lstm_hidden_size, n_classes)
 
-        self.adj = nn.Parameter(torch.randn(64, 64), requires_grad=True)
+        self.adj = nn.Parameter(torch.randn(22, 22), requires_grad=True)
         
     def forward(self, x):
         out = torch.einsum("ij,kjl->kil", self.adj, x)
