@@ -132,7 +132,7 @@ def split_samples_20_subjects(n_splits):
         cross_subject_data = {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test}
         pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}_new_20_subjects.pickle", "wb"))
         idc_dict = {'train_idc': subject_idc, 'test_idc': subject_idc}
-        json.dump(idc_dict, open(f"./dataset/train/cross_subject_data_{i}_new.json", "w"))
+        json.dump(idc_dict, open(f"./dataset/train/cross_subject_data_{i}_new_20_subjects.json", "w"))
     print('DONE.')
 
 def main():

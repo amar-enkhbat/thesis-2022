@@ -55,7 +55,7 @@ PARAMS = {
     'GCN_DROPOUT_P': 0.4,
 
     # GCNAuto hyperparameters
-    'GCNAUTO_KERNEL_TYPE': 'a',
+    'GCNAUTO_KERNEL_TYPE': 'b',
     'GCNAUTO_HIDDEN_SIZES': (512, 1024, 512),
     'GCNAUTO_DROPOUT_P': 0.4,
 
