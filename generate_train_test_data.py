@@ -14,6 +14,10 @@ from mne.decoding import Scaler
 from sklearn.model_selection import train_test_split
 from params import PARAMS
 
+random_seed = PARAMS['RANDOM_SEEDS'][0]
+random.seed(random_seed)
+np.random.seed(random_seed)
+
 def generate_preprocessed_data(subject_idc):
     """
     4, 8, 12: Motor imagery: T1: left vs T2: right hand
