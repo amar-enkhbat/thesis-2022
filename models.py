@@ -224,7 +224,7 @@ class GCRAM(nn.Module):
         return out
 
 class GCRAMAuto(nn.Module):
-    def __init__(self, seq_len, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
+    def __init__(self, seq_len, n_nodes, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
         super(GCRAMAuto, self).__init__()
 
         self.dropout1_p = dropout1_p
@@ -250,7 +250,7 @@ class GCRAMAuto(nn.Module):
         else:
             self.linear = nn.Linear(lstm_hidden_size, n_classes)
 
-        self.adj = nn.Parameter(torch.randn(22, 22), requires_grad=True)
+        self.adj = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
         
     def forward(self, x):
         out = torch.einsum("ij,kjl->kil", self.adj, x)

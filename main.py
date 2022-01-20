@@ -8,7 +8,7 @@ import torch
 import numpy as np 
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from utils import load_data, prepare_data, prepare_data_cnn, prepare_data_rnn, print_classification_report, plot_history, plot_cm, plot_adj
+from utils import load_data, print_classification_report, plot_history, plot_cm, plot_adj
 from models import FCN, CNN, RNN, GCN, GCNAuto, GCRAMAuto, GCRAM
 from params import PARAMS
 from train import get_dataloaders, train_model_2, init_model_params
@@ -49,27 +49,12 @@ def prepare_datasets(random_seed, dataset_name, results_path):
     Instead of using separate subjects for train and test datsets, 
     mix all data then random pick train, valid test datasets
     """ 
-    X_train = np.vstack([X_train, X_test])
-    y_train = np.hstack([y_train, y_test])
 
+    # Add channel
     if 'cnn' in results_path:
-        X_train, y_train = prepare_data_cnn(X_train, y_train, PARAMS['SEQ_LEN'])
-        # X_test, y_test = prepare_data_cnn(X_test, y_test, PARAMS['SEQ_LEN'])
-    elif 'rnn' in results_path:
-        X_train, y_train = prepare_data_rnn(X_train, y_train, PARAMS['SEQ_LEN'])
-        # X_test, y_test = prepare_data_rnn(X_test, y_test, PARAMS['SEQ_LEN'])
-    elif 'gcn' in results_path:
-        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
-        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
-    elif 'fcn' in results_path:
-        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
-        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
-    elif 'gcram' in results_path:
-        X_train, y_train = prepare_data(X_train, y_train, PARAMS['SEQ_LEN'])
-        # X_test, y_test = prepare_data(X_test, y_test, PARAMS['SEQ_LEN'])
+        X_train, X_test = np.expand_dims(X_train, 1), np.expand_dims(X_test, 1)
 
-    X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=random_seed)
-    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['VALID_SIZE'], shuffle=True, random_state=random_seed)
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=PARAMS['VALID_SIZE'], shuffle=False, random_state=random_seed)
     
     dataloaders = get_dataloaders(X_train, y_train, X_valid, y_valid, X_test, y_test, PARAMS['BATCH_SIZE'], random_seed=random_seed, device=PARAMS['DEVICE'])
 
@@ -166,6 +151,7 @@ def model_picker(model_name, random_seed, results_path, device):
 
     elif model_name == 'imagine_gcram_auto':
         model = GCRAMAuto(seq_len=PARAMS['SEQ_LEN'], 
+        n_nodes=PARAMS['N_CHANNELS'],
         cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], 
         cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], 
         cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], 
@@ -258,10 +244,11 @@ def main():
     random_seeds = PARAMS['RANDOM_SEEDS'][:1]
     
     ### For testing ###
-    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
-    dataset_names = [f'cross_subject_data_bci_2a_{i}_5_subjects' for i in range(5)]
+    # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    # dataset_names = [f'cross_subject_data_bci_2a_{i}_5_subjects' for i in range(5)]
+    dataset_names = [f'cross_subject_data_{i}_new' for i in range(5)]
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn_auto', 'imagine_gcram_auto']
+    # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn_auto', 'imagine_gcram_auto']
     random_seeds = random_seeds[:1]
     dataset_names = dataset_names[:1]
     ###################

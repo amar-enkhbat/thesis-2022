@@ -17,44 +17,9 @@ def load_data(dataset_path):
     y_test = dataset['y_test']
     X_test = dataset['X_test'].astype(np.float32)
 
-    y_train = np.vectorize(PARAMS['LABEL_MAP'].__getitem__)(y_train)
-    y_test = np.vectorize(PARAMS['LABEL_MAP'].__getitem__)(y_test)
-
     return X_train, y_train, X_test, y_test
 
 def prepare_data(X, y, seq_len):
-    n_channels = X.shape[1]
-
-    len_tail = X.shape[0] % seq_len
-    if len_tail == 0:
-        X = X.reshape(-1, seq_len, n_channels)
-        X = np.moveaxis(X, 1, -1)
-        y = y.reshape(-1, seq_len)
-    else:
-        X = X[:-len_tail].reshape(-1, seq_len, n_channels)
-        X = np.moveaxis(X, 1, -1)
-        y = y[:-len_tail].reshape(-1, seq_len)
-    y = y[:, -1]
-
-    return X, y
-
-def prepare_data_cnn(X, y, seq_len):
-    n_channels = X.shape[1]
-
-    len_tail = X.shape[0] % seq_len
-    if len_tail == 0:
-        X = X.reshape(-1, 1, seq_len, n_channels)
-        X = np.moveaxis(X, 2, -1)
-        y = y.reshape(-1, seq_len)
-    else:
-        X = X[:-len_tail].reshape(-1, 1, seq_len, n_channels)
-        X = np.moveaxis(X, 2, -1)
-        y = y[:-len_tail].reshape(-1, seq_len)
-    y = y[:, -1]
-
-    return X, y
-
-def prepare_data_rnn(X, y, seq_len):
     n_channels = X.shape[1]
 
     len_tail = X.shape[0] % seq_len

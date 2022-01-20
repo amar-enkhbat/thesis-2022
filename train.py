@@ -201,7 +201,7 @@ def train_model_2(model, optimizer, scheduler, loss_fn, train_dl, val_dl, epochs
 
         if epoch == 1 or epoch % 10 == 0:
             if verbose:
-                print('Epoch %3d/%3d, LR %5.4f, train loss: %5.4f, train acc: %5.4f, val loss: %5.4f, val acc: %5.4f' % \
+                print('Epoch %3d/%3d, LR: %5.4f, train loss: %5.4f, train acc: %5.4f, val loss: %5.4f, val acc: %5.4f' % \
                 (epoch, epochs, scheduler.get_lr()[-1], train_loss, train_acc, val_loss, val_acc))
 
         history['loss'].append(train_loss)
