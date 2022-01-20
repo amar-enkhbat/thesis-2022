@@ -132,13 +132,12 @@ def model_picker(model_name, random_seed, results_path, device):
         device=PARAMS['DEVICE'])
 
     elif model_name == 'imagine_gcram':
-        model = GCRAM(graph_type='n', 
+        model = GCRAM(graph_type=PARAMS['GCRAM_GRAPH_TYPE'], 
         seq_len=PARAMS['SEQ_LEN'], 
         cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], 
         cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], 
         cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], 
         cnn_stride=PARAMS['GCRAM_CNN_STRIDE'], 
-        maxpool_kernel_size=PARAMS['GCRAM_MAXPOOL_KERNEL_SIZE'], maxpool_stride=PARAMS['GCRAM_MAXPOOL_STRIDE'], 
         lstm_hidden_size=PARAMS['GCRAM_LSTM_HIDDEN_SIZE'], 
         is_bidirectional=PARAMS['GCRAM_LSTM_IS_BIDIRECTIONAL'], 
         lstm_n_layers=PARAMS['GCRAM_LSTM_N_LAYERS'], 
@@ -152,19 +151,19 @@ def model_picker(model_name, random_seed, results_path, device):
     elif model_name == 'imagine_gcram_auto':
         model = GCRAMAuto(seq_len=PARAMS['SEQ_LEN'], 
         n_nodes=PARAMS['N_CHANNELS'],
-        cnn_in_channels=PARAMS['GCRAM_CNN_IN_CHANNELS'], 
-        cnn_n_kernels=PARAMS['GCRAM_CNN_N_KERNELS'], 
-        cnn_kernel_size=PARAMS['GCRAM_CNN_KERNEL_SIZE'], 
-        cnn_stride=PARAMS['GCRAM_CNN_STRIDE'], 
-        maxpool_kernel_size=PARAMS['GCRAM_MAXPOOL_KERNEL_SIZE'], maxpool_stride=PARAMS['GCRAM_MAXPOOL_STRIDE'], 
-        lstm_hidden_size=PARAMS['GCRAM_LSTM_HIDDEN_SIZE'], 
-        is_bidirectional=PARAMS['GCRAM_LSTM_IS_BIDIRECTIONAL'], 
-        lstm_n_layers=PARAMS['GCRAM_LSTM_N_LAYERS'], 
-        attn_embed_dim=PARAMS['GCRAM_ATTN_EMBED_DIM'], 
+        gcn_hidden_size=PARAMS['GCRAMAUTO_GCN_HIDDEN_SIZE'],
+        cnn_in_channels=PARAMS['GCRAMAUTO_CNN_IN_CHANNELS'], 
+        cnn_n_kernels=PARAMS['GCRAMAUTO_CNN_N_KERNELS'], 
+        cnn_kernel_size=PARAMS['GCRAMAUTO_CNN_KERNEL_SIZE'], 
+        cnn_stride=PARAMS['GCRAMAUTO_CNN_STRIDE'], 
+        lstm_hidden_size=PARAMS['GCRAMAUTO_LSTM_HIDDEN_SIZE'], 
+        is_bidirectional=PARAMS['GCRAMAUTO_LSTM_IS_BIDIRECTIONAL'], 
+        lstm_n_layers=PARAMS['GCRAMAUTO_LSTM_N_LAYERS'], 
+        attn_embed_dim=PARAMS['GCRAMAUTO_ATTN_EMBED_DIM'], 
         n_classes=PARAMS['N_CLASSES'], 
-        lstm_dropout_p=PARAMS['GCRAM_LSTM_DROPOUT_P'], 
-        dropout1_p=PARAMS['GCRAM_DROPOUT1_P'], 
-        dropout2_p=PARAMS['GCRAM_DROPOUT2_P'], 
+        lstm_dropout_p=PARAMS['GCRAMAUTO_LSTM_DROPOUT_P'], 
+        dropout1_p=PARAMS['GCRAMAUTO_DROPOUT1_P'], 
+        dropout2_p=PARAMS['GCRAMAUTO_DROPOUT2_P'], 
         device=PARAMS['DEVICE'])
 
 
@@ -172,7 +171,7 @@ def model_picker(model_name, random_seed, results_path, device):
     model = init_model_params(model, random_seed=random_seed)
     
     if 'auto' in model_name:
-        model.init_node_embeddings()
+        model.init_adj_diag()
         if results_path is not None:
             pickle.dump(model.adj.cpu().detach().numpy(), open(f'{results_path}/untrained_adj.pickle', 'wb'))
             plot_adj(model.adj.cpu().detach().numpy(), f'{results_path}/untrained_adj.png')

@@ -28,7 +28,7 @@ def kernel_picker(kernel_name, random_seed, results_path, device):
 
 def main():
     kernel_names = ['a', 'b', 'c', 'd', 'e']
-    dataset_names = [f'cross_subject_data_{i}_new_20_subjects' for i in range(5)]
+    dataset_names = [f'cross_subject_data_{i}_new' for i in range(5)]
     dataset_names = dataset_names[:1]
     random_seeds = [0]
 
@@ -48,6 +48,8 @@ def main():
 
     kernel_names = ['gcn-' + i for i in kernel_names]
     final_results = show_metrics(time_now, kernel_names, dataset_names, random_seeds)
+
+    
 
 if __name__ == '__main__':
     main()

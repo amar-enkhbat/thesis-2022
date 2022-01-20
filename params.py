@@ -15,14 +15,6 @@ PARAMS = {
     'RANDOM_SEEDS': RANDOM_SEEDS,
     'LABEL_MAP': {'imagine_left_fist': 0, 'imagine_right_fist': 1, 'imagine_both_fist': 2, 'imagine_both_feet': 3},
 
-    # # BCI
-    # 'DEVICE': DEVICE,
-    # 'N_CLASSES': 4,
-    # 'N_CHANNELS': 22,
-    # 'N_RUNS': N_RUNS,
-    # 'RANDOM_SEEDS': RANDOM_SEEDS,
-    # 'LABEL_MAP': {'imagine_left': 0, 'imagine_right': 1, 'imagine_foot': 2, 'imagine_tongue': 3},
-
     # Global Hyperparameters
     'N_EPOCHS': 1,
     'LR': 0.001,
@@ -38,11 +30,10 @@ PARAMS = {
     'FCN_DROPOUT_P': 0.4,
 
     # CNN hyperparameters
-    'CNN_HIDDEN_SIZES': (16, 512),
-    'CNN_N_KERNELS': 16,
+    'CNN_HIDDEN_SIZES': (40, 512),
+    'CNN_N_KERNELS': 40,
     'CNN_HIDDEN_SIZE': 512,
-    # 'CNN_KERNEL_SIZE': (64, 64),
-    'CNN_KERNEL_SIZE': (64, 64),
+    'CNN_KERNEL_SIZE': (64, 45),
     'CNN_DROPOUT_P': 0.4,
 
     # RNN hyperparameters
@@ -60,23 +51,34 @@ PARAMS = {
     'GCNAUTO_DROPOUT_P': 0.4,
 
     # GCRAM hyperparameters
+    'GCRAM_GRAPH_TYPE': 'n',
     'GCRAM_CNN_IN_CHANNELS': 1,
-    'GCRAM_CNN_N_KERNELS': 20,
-    # 'GCRAM_CNN_KERNEL_SIZE': (64, 64),
-    'GCRAM_CNN_KERNEL_SIZE': (64, 40),
+    'GCRAM_CNN_N_KERNELS': 40,
+    'GCRAM_CNN_KERNEL_SIZE': (64, 45),
     'GCRAM_CNN_STRIDE': 1,
-    'GCRAM_MAXPOOL_KERNEL_SIZE': (1, 20),
-    'GCRAM_MAXPOOL_STRIDE': 2,
     'GCRAM_DROPOUT1_P': 0.4,
-    # 'GCRAM_LSTM_HIDDEN_SIZE': 64,
     'GCRAM_LSTM_HIDDEN_SIZE': 64,
     'GCRAM_LSTM_IS_BIDIRECTIONAL': True,
     'GCRAM_LSTM_N_LAYERS': 2,
     'GCRAM_LSTM_DROPOUT_P': 0.4,
     'GCRAM_ATTN_EMBED_DIM': 512,
-    'GCRAM_ATTN_N_HEADS': 2,
     'GCRAM_DROPOUT2_P': 0.4,
     'GCRAM_HIDDEN_SIZE': 512,
+
+    # GCRAMAuto hyperparameters
+    'GCRAMAUTO_GCN_HIDDEN_SIZE': 256,
+    'GCRAMAUTO_CNN_IN_CHANNELS': 1,
+    'GCRAMAUTO_CNN_N_KERNELS': 40,
+    'GCRAMAUTO_CNN_KERNEL_SIZE': (64, 45),
+    'GCRAMAUTO_CNN_STRIDE': 10,
+    'GCRAMAUTO_DROPOUT1_P': 0.4,
+    'GCRAMAUTO_LSTM_HIDDEN_SIZE': 64,
+    'GCRAMAUTO_LSTM_IS_BIDIRECTIONAL': True,
+    'GCRAMAUTO_LSTM_N_LAYERS': 2,
+    'GCRAMAUTO_LSTM_DROPOUT_P': 0.4,
+    'GCRAMAUTO_ATTN_EMBED_DIM': 512,
+    'GCRAMAUTO_DROPOUT2_P': 0.4,
+    'GCRAMAUTO_HIDDEN_SIZE': 512,
 
     ## TODO
     # GAT hyperparameters

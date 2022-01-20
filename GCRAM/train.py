@@ -24,7 +24,14 @@ num_node = 64
 model = 'ng_cram'
 
 # data = sio.loadmat("./cross_subject_data_"+str(file_num)+".mat")
-data = pickle.load(open("../dataset/train/cross_subject_data_0.pickle", "rb"))
+# data = pickle.load(open("../dataset/train/cross_subject_data_0.pickle", "rb"))
+X_train = np.random.randn(1024, 64)
+y_train = np.random.randint(0, 4, 1024)
+
+X_test = np.random.randn(1024, 64)
+y_test = np.random.randint(0, 4, 1024)
+
+data = {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
 print(data.keys())
 test_X	= data["X_test"]
 train_X	= data["X_train"]
@@ -262,7 +269,21 @@ correct_prediction = tf.equal(tf.argmax(tf.nn.softmax(y_), 1), tf.argmax(Y, 1))
 # calculate prediction accuracy
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name = 'accuracy')
 
+total_parameters = 0
+for variable in tf.trainable_variables():
+    # shape is an array of tf.Dimension
+    shape = variable.get_shape()
+    print(shape)
+    print(len(shape))
+    variable_parameters = 1
+    for dim in shape:
+        print(dim)
+        variable_parameters *= dim.value
+    print(variable_parameters)
+    total_parameters += variable_parameters
+print(total_parameters)
 
+exit(1)
 ###########################################################################
 # train test and save result
 ###########################################################################

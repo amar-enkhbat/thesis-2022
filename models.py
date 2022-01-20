@@ -168,24 +168,24 @@ class GCNAuto(nn.Module):
         return torch.mm(self.adj, self.adj.T) + self.eye
 
     def kernel_e(self):
-        return F.softmax(torch.mm(self.adj, self.adj.T) + self.eye) 
+        return F.softmax(torch.mm(self.adj, self.adj.T) + self.eye, dim=1) 
 
     def init_adj_diag(self):
         self.adj.data.fill_diagonal_(1)
         
 class GCRAM(nn.Module):
-    def __init__(self, graph_type, seq_len, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
+    def __init__(self, graph_type, seq_len, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
         super(GCRAM, self).__init__()
 
         self.dropout1_p = dropout1_p
         self.dropout2_p = dropout2_p
 
         self.conv1 = nn.Conv2d(cnn_in_channels, cnn_n_kernels, kernel_size=cnn_kernel_size, stride=cnn_stride)
-        self.maxpool1 = nn.MaxPool2d(kernel_size=maxpool_kernel_size, stride=maxpool_stride)
 
         cnn_output_size = (seq_len - cnn_kernel_size[1])//cnn_stride + 1
-        maxpool_output_size = (cnn_output_size-maxpool_kernel_size[1])//maxpool_stride+1
-        lstm_input_size = maxpool_output_size * cnn_in_channels * cnn_n_kernels
+
+        lstm_input_size = cnn_output_size * cnn_in_channels * cnn_n_kernels
+
         self.lstm1 = nn.LSTM(input_size=lstm_input_size, hidden_size=lstm_hidden_size, batch_first=True, bidirectional=is_bidirectional, num_layers=lstm_n_layers, dropout=lstm_dropout_p)
 
         if is_bidirectional:
@@ -204,11 +204,10 @@ class GCRAM(nn.Module):
 
     def forward(self, x):
         out = torch.einsum("ij,kjl->kil", self.adj, x)
-
+        
         out = out.unsqueeze(1)
 
         out = F.relu(self.conv1(out))
-        out = self.maxpool1(out)
 
         out = self.flatten(out)
         out = out.unsqueeze(1)
@@ -228,18 +227,19 @@ class GCRAM(nn.Module):
         return out
 
 class GCRAMAuto(nn.Module):
-    def __init__(self, seq_len, n_nodes, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
+    def __init__(self, seq_len, n_nodes, gcn_hidden_size, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
         super(GCRAMAuto, self).__init__()
 
         self.dropout1_p = dropout1_p
         self.dropout2_p = dropout2_p
 
-        self.conv1 = nn.Conv2d(cnn_in_channels, cnn_n_kernels, kernel_size=cnn_kernel_size, stride=cnn_stride)
-        self.maxpool1 = nn.MaxPool2d(kernel_size=maxpool_kernel_size, stride=maxpool_stride)
+        self.gc1 = BatchGraphConvolutionLayer(seq_len, gcn_hidden_size, n_nodes)
 
-        cnn_output_size = (seq_len - cnn_kernel_size[1])//cnn_stride + 1
-        maxpool_output_size = (cnn_output_size-maxpool_kernel_size[1])//maxpool_stride+1
-        lstm_input_size = maxpool_output_size * cnn_in_channels * cnn_n_kernels
+        self.conv1 = nn.Conv2d(cnn_in_channels, cnn_n_kernels, kernel_size=cnn_kernel_size, stride=cnn_stride)
+
+        cnn_output_size = (gcn_hidden_size - cnn_kernel_size[1])//cnn_stride + 1
+        lstm_input_size = cnn_output_size * cnn_in_channels * cnn_n_kernels
+
         self.lstm1 = nn.LSTM(input_size=lstm_input_size, hidden_size=lstm_hidden_size, batch_first=True, bidirectional=is_bidirectional, num_layers=lstm_n_layers, dropout=lstm_dropout_p)
 
         if is_bidirectional:
@@ -255,15 +255,14 @@ class GCRAMAuto(nn.Module):
             self.linear = nn.Linear(lstm_hidden_size, n_classes)
 
         self.adj = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
-        
-    def forward(self, x):
-        out = torch.einsum("ij,kjl->kil", self.adj, x)
 
+    def forward(self, x):
+        out = F.relu(self.gc1(x, self.adj))
+        out = F.dropout(out, p=self.dropout1_p)
+        
         out = out.unsqueeze(1)
 
         out = F.relu(self.conv1(out))
-        out = self.maxpool1(out)
-        
         out = self.flatten(out)
         out = out.unsqueeze(1)
         out = F.dropout(out, p=self.dropout1_p)
@@ -281,98 +280,5 @@ class GCRAMAuto(nn.Module):
 
         return out
 
-    def init_node_embeddings(self):
-        stdv = 1. / math.sqrt(self.adj.size(1))
-        self.adj.data.uniform_(-stdv, stdv)
+    def init_adj_diag(self):
         self.adj.data.fill_diagonal_(1)
-
-class GCNCRAMAuto(nn.Module):
-    def __init__(self, seq_len, n_nodes, cnn_in_channels, cnn_n_kernels, cnn_kernel_size, cnn_stride, maxpool_kernel_size, maxpool_stride, lstm_hidden_size, is_bidirectional, lstm_n_layers, attn_embed_dim, n_classes, lstm_dropout_p, dropout1_p, dropout2_p, device):
-        super(GCNCRAMAuto, self).__init__()
-
-        self.dropout1_p = dropout1_p
-        self.dropout2_p = dropout2_p
-
-        self.gcnauto = GCNAuto(kernel_type, in_features, n_nodes, n_classes, gcnauto_hidden_sizes, dropout1_p, device)
-        self.conv1 = nn.Conv2d(cnn_in_channels, cnn_n_kernels, kernel_size=cnn_kernel_size, stride=cnn_stride)
-        self.maxpool1 = nn.MaxPool2d(kernel_size=maxpool_kernel_size, stride=maxpool_stride)
-
-        cnn_output_size = (seq_len - cnn_kernel_size[1])//cnn_stride + 1
-        maxpool_output_size = (cnn_output_size-maxpool_kernel_size[1])//maxpool_stride+1
-        lstm_input_size = maxpool_output_size * cnn_in_channels * cnn_n_kernels
-        self.lstm1 = nn.LSTM(input_size=lstm_input_size, hidden_size=lstm_hidden_size, batch_first=True, bidirectional=is_bidirectional, num_layers=lstm_n_layers, dropout=lstm_dropout_p)
-
-        if is_bidirectional:
-            self.attention = SelfAttentionLayer(hidden_size=lstm_hidden_size*2, attention_size=attn_embed_dim, return_alphas=True)
-        else:
-            self.attention = SelfAttentionLayer(hidden_size=lstm_hidden_size, attention_size=attn_embed_dim, return_alphas=True)
-        
-        self.flatten = nn.Flatten()
-
-        if is_bidirectional:
-            self.linear = nn.Linear(lstm_hidden_size*2, n_classes)
-        else:
-            self.linear = nn.Linear(lstm_hidden_size, n_classes)
-
-        self.adj = nn.Parameter(torch.randn(n_nodes, n_nodes), requires_grad=True)
-        
-    def forward(self, x):
-        out = torch.einsum("ij,kjl->kil", self.adj, x)
-
-        out = out.unsqueeze(1)
-
-        out = F.relu(self.conv1(out))
-        out = self.maxpool1(out)
-        
-        out = self.flatten(out)
-        out = out.unsqueeze(1)
-        out = F.dropout(out, p=self.dropout1_p)
-
-        out, (h_T, c_T) = self.lstm1(out)
-        out = out[:, -1, :]
-
-        out = out.unsqueeze(1)
-
-        out, attn_weights = self.attention(out)
-        out = F.dropout(out, p=self.dropout2_p)
-
-        out = self.flatten(out)
-        out = self.linear(out)
-
-        return out
-
-    def init_node_embeddings(self):
-        stdv = 1. / math.sqrt(self.adj.size(1))
-        self.adj.data.uniform_(-stdv, stdv)
-        self.adj.data.fill_diagonal_(1)
-
-
-# class GATAuto(nn.Module):
-#     """DOES NOT WORK!!!"""
-#     def __init__(self, in_features, n_nodes, num_classes, hidden_sizes, dropout_p):
-#         super(GATAuto, self).__init__()
-
-#         self.dropout_p = dropout_p
-
-#         self.gat1 = BatchGraphAttentionLayer(in_features, hidden_sizes[0], alpha=0.2, dropout=dropout_p)
-#         self.gat2 = BatchGraphAttentionLayer(hidden_sizes[0], hidden_sizes[1], alpha=0.2, dropout=dropout_p)
-#         self.gat3 = BatchGraphAttentionLayer(hidden_sizes[1], hidden_sizes[2], alpha=0.2, dropout=dropout_p)
-
-#         self.flatten = nn.Flatten()
-#         self.linear = nn.Linear(hidden_sizes[2]*n_nodes, num_classes)
-
-#         self.adj = nn.Parameter(torch.randn(n_nodes, n_nodes))
-#     def forward(self, x):
-#         out = F.relu(self.gat1(x, self.adj))
-#         out = F.relu(self.gat2(out, self.adj))
-#         out = F.relu(self.gat3(out, self.adj))
-
-#         out = self.flatten(out)
-#         out = self.linear(out)
-
-#         return out
-
-#     def init_node_embeddings(self):
-#         stdv = 1. / math.sqrt(self.adj.size(1))
-#         self.adj.data.uniform_(-stdv, stdv)
-#         self.adj.data.fill_diagonal_(1)
