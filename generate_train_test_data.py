@@ -115,6 +115,26 @@ def split_samples(n_splits):
         json.dump(idc_dict, open(f"./dataset/train/cross_subject_data_{i}_new.json", "w"))
     print('DONE.')
 
+def split_samples_50_subjects(n_splits):
+    subject_idc = [i for i in range(1, 110)]
+    exclusions = [88, 89, 92, 100]
+    subject_idc = [i for i in subject_idc if i not in exclusions]
+    subject_idc = random.sample(subject_idc, 50)
+    print('Number of subjects to use:', len(subject_idc))
+
+    print('Loading data...')
+    X, y = generate_preprocessed_data(subject_idc)
+    print('Load complete.')
+
+    print('Creating train/test datasets...')
+    for i in tqdm(range(n_splits)):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=PARAMS['TEST_SIZE'], shuffle=True, random_state=PARAMS['RANDOM_SEEDS'][i])
+        cross_subject_data = {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test}
+        pickle.dump(cross_subject_data, open(f"./dataset/train/cross_subject_data_{i}_new_50_subjects.pickle", "wb"))
+        idc_dict = {'train_idc': subject_idc, 'test_idc': subject_idc}
+        json.dump(idc_dict, open(f"./dataset/train/cross_subject_data_{i}_new_50_subjects.json", "w"))
+    print('DONE.')
+
 def split_samples_20_subjects(n_splits):
     subject_idc = [i for i in range(1, 110)]
     exclusions = [88, 89, 92, 100]
@@ -138,6 +158,7 @@ def split_samples_20_subjects(n_splits):
 def main():
     n_splits = 10
     split_samples(n_splits)
+    split_samples_50_subjects(n_splits)
     split_samples_20_subjects(n_splits)
 if __name__ == '__main__':
     main()
