@@ -9,17 +9,17 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 PARAMS = {
     # PhysioNet
     'DEVICE': DEVICE,
-    'N_CLASSES': 10,
-    'N_CHANNELS': 28,
+    'N_CLASSES': 4,
+    'N_CHANNELS': 64,
     'N_RUNS': N_RUNS,
     'RANDOM_SEEDS': RANDOM_SEEDS,
     'LABEL_MAP': {'imagine_left_fist': 0, 'imagine_right_fist': 1, 'imagine_both_fist': 2, 'imagine_both_feet': 3},
 
     # Global Hyperparameters
-    'N_EPOCHS': 100,    
+    'N_EPOCHS': 300,    
     'LR': 0.001,
     'BATCH_SIZE': 32,
-    'SEQ_LEN': 28,
+    'SEQ_LEN': 100,
     'SCHEDULER_STEP_SIZE': 10,
     'SCHEDULER_GAMMA': 0.9,
     'TEST_SIZE': 1/10,
