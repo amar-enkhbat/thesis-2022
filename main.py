@@ -235,21 +235,22 @@ def show_metrics(time_now, model_names, dataset_names, random_seeds):
 
 
 def main():
+    n_splits = 10
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
 
-    # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
-    dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
+    # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(n_splits)]
+    dataset_names = [f'cross_subject_data_{i}_new_20_subjects' for i in range(n_splits)]
 
     random_seeds = PARAMS['RANDOM_SEEDS'][:1]
     
     ### For testing ###
     # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(5)]
     # dataset_names = [f'cross_subject_data_bci_2a_{i}_5_subjects' for i in range(5)]
-    dataset_names = [f'cross_subject_data_{i}_new_20_subjects' for i in range(5)]
-    model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
+    # dataset_names = [f'cross_subject_data_{i}_new_20_subjects' for i in range(5)]
+    # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
     # model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn_auto', 'imagine_gcram_auto']
-    random_seeds = random_seeds[:1]
-    dataset_names = dataset_names[:1]
+    # random_seeds = random_seeds[:1]
+    # dataset_names = dataset_names[:1]
     ###################
 
     print('#' * 50)

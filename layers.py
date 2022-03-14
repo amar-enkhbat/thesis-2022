@@ -106,6 +106,8 @@ class BatchGraphConvolutionLayer(nn.Module):
         support = torch.einsum("ijk,kl->ijl", input, self.weight)
         # [N, n_nodes, node_features] x [in_features, out_features] = [N, n_nodes, out_features]
         output = torch.einsum("ij,kjl->kil", adj, support)
+
+        # output = torch.einsum("sj,kjl->ksl", adj, support)
         # [n_nodes, n_nodes][N, n_nodes, out_features] = [N, n_nodes, out_features]
         if self.bias is not None:
             return output + self.bias

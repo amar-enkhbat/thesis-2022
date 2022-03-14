@@ -216,11 +216,11 @@ def train_model_2(model, optimizer, scheduler, loss_fn, train_dl, val_dl, epochs
     total_time_sec     = end_time_sec - start_time_sec
     time_per_epoch_sec = total_time_sec / epochs
 
-    if verbose:
-        print()
-        print('Time total:     %5.2f sec' % (total_time_sec))
-        print('Time per epoch: %5.2f sec' % (time_per_epoch_sec))
-        print('Best val Acc: {:4f}'.format(best_acc))
+    # if verbose:
+    print()
+    print('Time total:     %5.2f sec' % (total_time_sec))
+    print('Time per epoch: %5.2f sec' % (time_per_epoch_sec))
+    print('Best val Acc: {:4f}'.format(best_acc))
 
     model.load_state_dict(best_model_wts)
     return model, history
