@@ -239,7 +239,7 @@ def main():
     model_names = ['imagine_fcn', 'imagine_cnn', 'imagine_rnn', 'imagine_gcn', 'imagine_gcn_auto', 'imagine_gcram', 'imagine_gcram_auto']
 
     # dataset_names = [f'cross_subject_data_{i}_5_subjects' for i in range(n_splits)]
-    dataset_names = [f'cross_subject_data_{i}_new_20_subjects' for i in range(n_splits)]
+    dataset_names = [f'cross_subject_data_{i}_new_50_subjects' for i in range(n_splits)]
 
     random_seeds = PARAMS['RANDOM_SEEDS'][:1]
     
